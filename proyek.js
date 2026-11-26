@@ -1,4 +1,3 @@
-const fs = require('fs'), path = require('path');
 const { isAuthed } = require('./_auth');
 const hasBlob = () => !!process.env.BLOB_READ_WRITE_TOKEN;
 async function read() {
@@ -10,7 +9,7 @@ async function read() {
       if (r.ok) return await r.json();
     } catch (e) { /* belum ada blob → pakai file awal */ }
   }
-  return JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'proyek.json'), 'utf8'));
+  return require('../data/proyek.json'); // require statis → otomatis ikut ter-bundle oleh Vercel
 }
 const num = (v, d = 0) => (Number.isFinite(+v) ? +v : d);
 const clean = (a, i) => ({
