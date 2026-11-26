@@ -10,7 +10,7 @@ Bootstrap 5 + Leaflet + Vercel Functions. Data: JSON (impor/ekspor XLSX).
 ## Deploy
 1. Push ke GitHub → Import di vercel.com (Framework: Other).
 2. Settings → Environment Variables: `ADMIN_USER`, `ADMIN_PASSWORD`, `SESSION_SECRET` (lihat `.env.example`).
-3. Storage → Create → **Blob** → hubungkan ke project. Project ini memakai Vercel Blob OIDC, sehingga pada koneksi OIDC baru tidak perlu mengisi `BLOB_READ_WRITE_TOKEN` secara manual.
+3. Storage → Create → **Blob** → hubungkan ke project (otomatis mengisi `BLOB_READ_WRITE_TOKEN`).
 4. Redeploy. Buka `/admin`, login, ubah data, klik **Simpan ke Server**.
 
 Lokal: `npm i && npx vercel dev` (isi `.env` dari `.env.example`).
