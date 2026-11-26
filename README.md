@@ -1,17 +1,13 @@
-# Monitoring Proyek Rumah Pompa & Drainase – Kota Surabaya (v2)
+# Monitoring Proyek Rumah Pompa & Drainase Surabaya
 
-Bootstrap 5 + Leaflet + Vercel Functions. Data: JSON (impor/ekspor XLSX).
+- `api/auth.js`: login/logout
+- `api/proyek.js`: GET/PUT data proyek
+- `data/proyek.json`: data awal/fallback
+- `assets/`: CSS dan helper JS
+- `admin.html`: panel admin
+- `index.html`: situs publik
 
-- `/` halaman publik · `/admin` login & kelola proyek
-- `api/auth.js` login/logout (cookie HttpOnly bertanda tangan HMAC, 8 jam)
-- `api/proyek.js` GET publik, PUT khusus admin (disimpan ke Vercel Blob)
-- `data/proyek.json` data awal (dipakai bila Blob masih kosong)
+## Vercel Blob OIDC
+Project menggunakan `@vercel/blob` terbaru. Pada Blob store yang sudah di-upgrade ke OIDC, Vercel Functions mendapatkan autentikasi OIDC berumur pendek secara otomatis; tidak perlu menyimpan long-lived `BLOB_READ_WRITE_TOKEN`.
 
-## Deploy
-1. Push ke GitHub → Import di vercel.com (Framework: Other).
-2. Settings → Environment Variables: `ADMIN_USER`, `ADMIN_PASSWORD`, `SESSION_SECRET` (lihat `.env.example`).
-3. Storage → Create → **Blob** → hubungkan ke project (otomatis mengisi `BLOB_READ_WRITE_TOKEN`).
-4. Redeploy. Buka `/admin`, login, ubah data, klik **Simpan ke Server**.
-
-Lokal: `npm i && npx vercel dev` (isi `.env` dari `.env.example`).
-Kolom XLSX: id, nama, jenis, kecamatan, lat, lng, progres, rencana, nilai (juta Rp), pelaksana, target (YYYY-MM-DD).
+Set Environment Variables: `ADMIN_USER`, `ADMIN_PASSWORD`, `SESSION_SECRET`. Hubungkan Blob store ke project dan deploy ulang.
