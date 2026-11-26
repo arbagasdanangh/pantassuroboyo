@@ -2,93 +2,72 @@
 <html lang="id"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Progres Proyek Rumah Pompa & Drainase – Kota Surabaya</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet">
+<link href="assets/app.css" rel="stylesheet">
+</head><body>
+<nav class="navbar navbar-dark bg-navy sticky-top"><div class="container">
+ <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/"><i class="bi bi-droplet-half fs-3 text-warning"></i><span>Pemerintah Kota Surabaya<small>DPMPTSP · Monitoring Proyek</small></span></a>
+ <a href="/admin" class="btn btn-warning btn-sm fw-bold rounded-pill px-3"><i class="bi bi-shield-lock"></i> Login Admin</a>
+</div></nav>
+
+<header class="hero"><div class="container">
+ <h1 class="display-5">Progres Proyek<br>Rumah Pompa & Drainase<br><span class="accent">Kota Surabaya</span></h1>
+ <p class="lead mb-0 fst-italic opacity-75">Bersama Wujudkan Surabaya Bebas Banjir</p>
+</div></header>
+
+<main class="container">
+ <div class="row g-3 stat-row" id="stats"></div>
+
+ <div class="row g-2 mt-4 align-items-center">
+  <div class="col-lg-5"><div class="search-wrap"><i class="bi bi-search"></i><input id="q" class="form-control search" placeholder="Cari lokasi atau kecamatan..."></div></div>
+  <div class="col-lg-7 d-flex flex-wrap gap-2" id="chips">
+   <button class="chip on" data-j="">Semua</button><button class="chip" data-j="Rumah Pompa"><i class="bi bi-building"></i> Rumah Pompa</button><button class="chip" data-j="Drainase"><i class="bi bi-water"></i> Drainase</button>
+   <select id="fs" class="form-select chip w-auto"><option value="">Semua Status</option><option value="berjalan">Berjalan</option><option value="perhatian">Perlu Perhatian</option><option value="terlambat">Terlambat</option><option value="selesai">Selesai</option></select>
+   <button class="chip ms-lg-auto" id="loc"><i class="bi bi-crosshair"></i> Lokasi Saya</button>
+  </div>
+ </div>
+
+ <div class="row g-3 mt-1">
+  <div class="col-lg-8"><div class="card p-2"><div id="map"></div>
+   <div class="d-flex flex-wrap gap-3 small p-2" id="legend"></div></div></div>
+  <div class="col-lg-4 d-flex flex-column gap-3">
+   <div class="card p-3" id="detail"><div class="text-center text-muted py-4"><i class="bi bi-geo-alt fs-1 d-block"></i>Pilih penanda di peta atau daftar proyek untuk melihat detail.</div></div>
+   <div class="card p-2 flex-grow-1"><div class="fw-bold px-2 pt-2">Daftar Proyek <span class="badge bg-primary rounded-pill" id="n"></span></div>
+    <div id="list" style="max-height:290px;overflow:auto"></div></div>
+  </div>
+ </div>
+</main>
+<footer class="text-center text-muted small py-4 mt-4">© Pemerintah Kota Surabaya · DPMPTSP — Surabaya Lebih Tangguh Tanpa Banjir</footer>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-:root{--navy:#0b2a6f;--blue:#1d4ed8;--bg:#eef4ff;--card:#fff;--tx:#0f1b3d;--mut:#64748b;--g:#16a34a;--y:#eab308;--r:#dc2626;--b:#2563eb}
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--tx)}
-header{background:linear-gradient(135deg,#dbeafe,#fff);padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-h1{margin:0;font-size:1.5rem;color:var(--navy)}h1 small{display:block;color:var(--blue);font-size:1rem}
-nav button{border:0;background:none;padding:8px 14px;border-radius:20px;font-weight:600;cursor:pointer;color:var(--navy)}nav button.on{background:var(--blue);color:#fff}
-main{padding:16px 20px;max-width:1280px;margin:auto}.grid{display:grid;gap:14px}
-.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:14px}
-.card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 2px 10px #1e3a8a18}
-.stat b{font-size:1.8rem;display:block}.stat span{color:var(--mut);font-size:.85rem}
-.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
-.bar input,.bar select{padding:10px 14px;border:1px solid #cbd5e1;border-radius:20px;font-size:.95rem}.bar input{flex:1;min-width:200px}
-.two{grid-template-columns:2fr 1fr}@media(max-width:800px){.two{grid-template-columns:1fr}}
-#map{height:430px;border-radius:12px}
-.badge{display:inline-block;color:#fff;padding:3px 10px;border-radius:12px;font-size:.78rem;font-weight:700}
-.berjalan{background:var(--g)}.perhatian{background:var(--y);color:#222}.terlambat{background:var(--r)}.selesai{background:var(--b)}
-.prog{height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin:6px 0}.prog i{display:block;height:100%;background:var(--blue)}
-.big{font-size:2.4rem;font-weight:800;color:var(--navy)}.row{display:flex;justify-content:space-between;gap:8px;font-size:.9rem;margin:4px 0}
-.list .item{padding:10px;border-bottom:1px solid #e2e8f0;cursor:pointer}.list .item:hover{background:#f1f5f9}
-table{width:100%;border-collapse:collapse;font-size:.88rem}th,td{padding:7px;text-align:left;border-bottom:1px solid #e2e8f0}
-td input{width:70px;padding:4px;border:1px solid #cbd5e1;border-radius:6px}
-button.pri{background:var(--blue);color:#fff;border:0;padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:600}
-.hide{display:none}.neg{color:var(--r);font-weight:700}.pos{color:var(--g);font-weight:700}
-</style></head><body>
-<header><h1>Progres Proyek Rumah Pompa & Drainase<small>Kota Surabaya – Bersama Wujudkan Surabaya Bebas Banjir</small></h1>
-<nav><button id="tPub" class="on">Untuk Masyarakat</button><button id="tAdm">Admin</button></nav></header>
-<main>
-<section id="stats" class="grid stats"></section>
-<div id="pub">
- <div class="bar"><input id="q" placeholder="Cari lokasi proyek...">
-  <select id="fj"><option value="">Semua Jenis</option><option>Rumah Pompa</option><option>Drainase</option></select>
-  <select id="fs"><option value="">Semua Status</option><option value="berjalan">Berjalan</option><option value="perhatian">Perlu Perhatian</option><option value="terlambat">Terlambat</option><option value="selesai">Selesai</option></select></div>
- <div class="grid two"><div class="card"><div id="map"></div></div>
-  <div class="grid" style="align-content:start"><div class="card" id="detail">Klik penanda pada peta untuk melihat detail proyek.</div>
-  <div class="card list" id="list" style="max-height:300px;overflow:auto"></div></div></div>
-</div>
-<div id="adm" class="hide">
- <div class="card"><div class="bar"><button class="pri" id="bImp">Impor XLSX/JSON</button><input type="file" id="file" accept=".xlsx,.xls,.json" class="hide">
-  <button class="pri" id="bX">Ekspor XLSX</button><button class="pri" id="bJ">Ekspor JSON</button><button class="pri" id="bR" style="background:#64748b">Reset</button></div>
-  <p style="color:var(--mut);font-size:.85rem;margin:0 0 10px">Ubah progres/rencana di tabel; tersimpan di browser ini. Ekspor JSON → ganti <code>data/proyek.json</code> lalu deploy.</p>
-  <div style="overflow-x:auto"><table id="tbl"></table></div></div>
-</div></main>
+<script src="assets/common.js"></script>
 <script>
-const $=s=>document.querySelector(s);let D=[],map,layer;
-const st=p=>p.progres>=100?'selesai':(p.progres-p.rencana<=-5?'terlambat':(p.progres-p.rencana<0?'perhatian':'berjalan'));
-const lbl={berjalan:'Berjalan',perhatian:'Perlu Perhatian',terlambat:'Terlambat',selesai:'Selesai'};
-const col={berjalan:'#16a34a',perhatian:'#eab308',terlambat:'#dc2626',selesai:'#2563eb'};
-const rp=j=>'Rp '+(j>=1000?(j/1000).toFixed(2).replace('.',',')+' M':j+' Jt');
-const tgl=t=>new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
-async function load(){try{const s=localStorage.getItem('proyek');if(s){D=JSON.parse(s);return}}catch(e){}
- D=await (await fetch('data/proyek.json',{cache:'no-cache'})).json()}
-function save(){try{localStorage.setItem('proyek',JSON.stringify(D))}catch(e){}}
-function stats(){const c=k=>D.filter(p=>st(p)==k).length,tot=D.reduce((a,p)=>a+ +p.nilai,0);
- const avg=D.length?Math.round(D.reduce((a,p)=>a+ +p.progres,0)/D.length):0;
- $('#stats').innerHTML=[['Total Proyek',D.length],['Berjalan',c('berjalan')],['Perlu Perhatian',c('perhatian')],['Terlambat',c('terlambat')],['Selesai',c('selesai')],['Progres Rata-rata',avg+'%'],['Total Kontrak',rp(tot)]]
- .map(([a,b])=>`<div class="card stat"><b>${b}</b><span>${a}</span></div>`).join('')}
-function filt(){const q=$('#q').value.toLowerCase(),j=$('#fj').value,s=$('#fs').value;
- return D.filter(p=>(!q||(p.nama+p.kecamatan).toLowerCase().includes(q))&&(!j||p.jenis==j)&&(!s||st(p)==s))}
-function show(p){const d=p.progres-p.rencana,s=st(p);
- $('#detail').innerHTML=`<span class="badge ${s}">${lbl[s]}</span><h3 style="margin:8px 0 2px">${p.nama}</h3><small style="color:var(--mut)">Kec. ${p.kecamatan}, Surabaya · ${p.jenis}</small>
- <div class="big">${p.progres}%</div><div class="prog"><i style="width:${p.progres}%"></i></div>
- <div class="row"><span>Rencana ${p.rencana}%</span><span class="${d<0?'neg':'pos'}">Deviasi ${d>0?'+':''}${d}%</span></div>
- <div class="row"><span>Nilai Kontrak</span><b>${rp(p.nilai)}</b></div><div class="row"><span>Pelaksana</span><b>${p.pelaksana}</b></div>
- <div class="row"><span>Target Selesai</span><b>${tgl(p.target)}</b></div>`;map.setView([p.lat,p.lng],14)}
+const $=s=>document.querySelector(s);let D=[],map,layer,J='',sel=null;
+function stats(){const c=k=>cnt(D,k);
+ const items=[['bi-collection-fill','#1d4ed8','Total Proyek',D.length],['bi-play-fill','#16a34a','Berjalan',c('berjalan')],['bi-exclamation-lg','#eab308','Perlu Perhatian',c('perhatian')],['bi-alarm-fill','#dc2626','Terlambat',c('terlambat')],['bi-check2-circle','#2563eb','Selesai',c('selesai')],['bi-cash-stack','#0a2463','Total Kontrak',rp(D.reduce((a,p)=>a+ +p.nilai,0))]];
+ $('#stats').innerHTML=items.map(([i,c,l,v])=>`<div class="col-6 col-md-4 col-xl-2"><div class="card p-3 stat"><div class="ic" style="background:${c}"><i class="bi ${i}"></i></div><div><b>${v}</b><span>${l}</span></div></div></div>`).join('');
+ $('#legend').innerHTML=Object.keys(LBL).map(k=>`<span><i class="bi bi-circle-fill" style="color:${COL[k]}"></i> ${LBL[k]}</span>`).join('')}
+function filt(){const q=$('#q').value.toLowerCase(),s=$('#fs').value;
+ return D.filter(p=>(!q||(p.nama+p.kecamatan).toLowerCase().includes(q))&&(!J||p.jenis==J)&&(!s||st(p)==s))}
+function show(p){sel=p.id;const d=dev(p);
+ $('#detail').innerHTML=`<div class="d-flex justify-content-between align-items-start"><div><h5 class="fw-bold mb-0">${esc(p.nama)}</h5><small class="text-muted"><i class="bi bi-geo-alt-fill"></i> Kec. ${esc(p.kecamatan)} · ${esc(p.jenis)}</small></div>${pill(p)}</div>
+ <div class="mt-3 d-flex align-items-end justify-content-between"><div class="big">${p.progres}%</div><div class="text-end small"><div class="text-muted">Rencana ${p.rencana}%</div><b class="${d<0?'text-danger':'text-success'}"><i class="bi bi-arrow-${d<0?'down':'up'}"></i> Deviasi ${d>0?'+':''}${d}%</b></div></div>
+ <div class="progress my-2"><div class="progress-bar" style="width:${p.progres}%"></div></div>
+ <ul class="list-unstyled small mb-0 mt-2"><li class="d-flex justify-content-between py-1"><span class="text-muted">Nilai Kontrak</span><b>${rp(p.nilai)}</b></li><li class="d-flex justify-content-between py-1"><span class="text-muted">Pelaksana</span><b>${esc(p.pelaksana)}</b></li><li class="d-flex justify-content-between py-1"><span class="text-muted">Target Selesai</span><b>${tgl(p.target)}</b></li></ul>
+ <a class="btn btn-primary rounded-pill mt-3" target="_blank" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}"><i class="bi bi-sign-turn-right"></i> Petunjuk Arah</a>`;
+ map.flyTo([p.lat,p.lng],15,{duration:.6});document.querySelectorAll('.pitem').forEach(e=>e.classList.toggle('on',e.dataset.id==p.id))}
 function render(){const f=filt();layer.clearLayers();
- f.forEach(p=>{L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[26,26],html:`<div style="width:26px;height:26px;border-radius:50%;background:${col[st(p)]};border:3px solid #fff;box-shadow:0 1px 5px #0006;color:#fff;font-size:12px;text-align:center;line-height:20px">${p.jenis=='Drainase'?'≈':'⌂'}</div>`})}).addTo(layer).on('click',()=>show(p))});
- $('#list').innerHTML=f.map(p=>`<div class="item" data-id="${p.id}"><b>${p.nama}</b> <span class="badge ${st(p)}">${lbl[st(p)]}</span><div class="prog"><i style="width:${p.progres}%"></i></div><small>${p.progres}% · target ${tgl(p.target)}</small></div>`).join('')||'Tidak ada data.';
- document.querySelectorAll('.item').forEach(e=>e.onclick=()=>show(D.find(p=>p.id==e.dataset.id)));stats();table()}
-function table(){$('#tbl').innerHTML='<tr><th>Proyek</th><th>Jenis</th><th>Progres %</th><th>Rencana %</th><th>Deviasi</th><th>Status</th></tr>'+
- D.map((p,i)=>`<tr><td>${p.nama}</td><td>${p.jenis}</td><td><input type="number" min="0" max="100" value="${p.progres}" data-i="${i}" data-k="progres"></td><td><input type="number" min="0" max="100" value="${p.rencana}" data-i="${i}" data-k="rencana"></td><td class="${p.progres-p.rencana<0?'neg':'pos'}">${p.progres-p.rencana}%</td><td><span class="badge ${st(p)}">${lbl[st(p)]}</span></td></tr>`).join('');
- document.querySelectorAll('#tbl input').forEach(e=>e.onchange=()=>{D[e.dataset.i][e.dataset.k]=Math.max(0,Math.min(100,+e.value||0));save();render()})}
-function dl(blob,n){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=n;a.click()}
-$('#bJ').onclick=()=>dl(new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),'proyek.json');
-$('#bX').onclick=()=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(D),'proyek');XLSX.writeFile(wb,'proyek.xlsx')};
-$('#bR').onclick=async()=>{try{localStorage.removeItem('proyek')}catch(e){}await load();render()};
-$('#bImp').onclick=()=>$('#file').click();
-$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;let rows;
- if(f.name.endsWith('.json'))rows=JSON.parse(await f.text());else{const wb=XLSX.read(await f.arrayBuffer());rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])}
- D=rows.map((r,i)=>({id:r.id??i+1,nama:r.nama,jenis:r.jenis,kecamatan:r.kecamatan,lat:+r.lat,lng:+r.lng,progres:+r.progres||0,rencana:+r.rencana||0,nilai:+r.nilai||0,pelaksana:r.pelaksana||'-',target:r.target}));
- save();render()};
-['#q','#fj','#fs'].forEach(s=>$(s).oninput=render);
-$('#tPub').onclick=()=>{$('#pub').classList.remove('hide');$('#adm').classList.add('hide');$('#tPub').className='on';$('#tAdm').className='';setTimeout(()=>map.invalidateSize(),50)};
-$('#tAdm').onclick=()=>{$('#adm').classList.remove('hide');$('#pub').classList.add('hide');$('#tAdm').className='on';$('#tPub').className=''};
+ f.forEach(p=>L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,30],html:`<div class="mk" style="background:${COL[st(p)]}"><i class="bi ${p.jenis=='Drainase'?'bi-water':'bi-building'}"></i></div>`})}).addTo(layer).on('click',()=>show(p)).bindTooltip(esc(p.nama)));
+ $('#n').textContent=f.length;
+ $('#list').innerHTML=f.map(p=>`<div class="pitem ${p.id==sel?'on':''}" data-id="${p.id}"><div class="d-flex justify-content-between gap-2"><b class="small">${esc(p.nama)}</b>${pill(p)}</div><div class="progress my-1" style="height:6px"><div class="progress-bar" style="width:${p.progres}%"></div></div><small class="text-muted">${p.progres}% · target ${tgl(p.target)}</small></div>`).join('')||'<div class="text-muted p-3">Tidak ada proyek ditemukan.</div>';
+ document.querySelectorAll('.pitem').forEach(e=>e.onclick=()=>show(D.find(p=>p.id==e.dataset.id)));
+ if(f.length)map.fitBounds(f.map(p=>[p.lat,p.lng]),{padding:[40,40],maxZoom:14})}
+$('#q').oninput=$('#fs').onchange=render;
+document.querySelectorAll('#chips .chip[data-j]').forEach(b=>b.onclick=()=>{document.querySelectorAll('#chips .chip[data-j]').forEach(x=>x.classList.remove('on'));b.classList.add('on');J=b.dataset.j;render()});
+$('#loc').onclick=()=>navigator.geolocation?.getCurrentPosition(g=>{map.flyTo([g.coords.latitude,g.coords.longitude],14);L.circleMarker([g.coords.latitude,g.coords.longitude],{radius:8,color:'#fff',weight:3,fillColor:'#2563eb',fillOpacity:1}).addTo(map).bindTooltip('Anda di sini')},()=>alert('Izin lokasi ditolak.'));
 (async()=>{map=L.map('map').setView([-7.2756,112.7378],12);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
- layer=L.layerGroup().addTo(map);await load();render()})();
+ layer=L.layerGroup().addTo(map);D=await getData();stats();render()})();
 </script></body></html>

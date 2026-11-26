@@ -1,14 +1,17 @@
-# Progres Proyek Rumah Pompa & Drainase – Kota Surabaya
+# Monitoring Proyek Rumah Pompa & Drainase – Kota Surabaya (v2)
 
-Situs statis (HTML + JS). Data: `data/proyek.json`.
+Bootstrap 5 + Leaflet + Vercel Functions. Data: JSON (impor/ekspor XLSX).
 
-## Deploy ke Vercel
-1. Push folder ini ke GitHub, lalu "Import Project" di vercel.com (Framework: Other, tanpa build command).
-2. Atau: `npm i -g vercel` lalu `vercel --prod` di folder ini.
+- `/` halaman publik · `/admin` login & kelola proyek
+- `api/auth.js` login/logout (cookie HttpOnly bertanda tangan HMAC, 8 jam)
+- `api/proyek.js` GET publik, PUT khusus admin (disimpan ke Vercel Blob)
+- `data/proyek.json` data awal (dipakai bila Blob masih kosong)
 
-## Update data
-- Edit `data/proyek.json` lalu deploy ulang, ATAU
-- Tab **Admin** → Impor XLSX/JSON → cek hasil → Ekspor JSON → ganti `data/proyek.json`.
-- Kolom XLSX: id, nama, jenis, kecamatan, lat, lng, progres, rencana, nilai (juta Rp), pelaksana, target (YYYY-MM-DD).
+## Deploy
+1. Push ke GitHub → Import di vercel.com (Framework: Other).
+2. Settings → Environment Variables: `ADMIN_USER`, `ADMIN_PASSWORD`, `SESSION_SECRET` (lihat `.env.example`).
+3. Storage → Create → **Blob** → hubungkan ke project (otomatis mengisi `BLOB_READ_WRITE_TOKEN`).
+4. Redeploy. Buka `/admin`, login, ubah data, klik **Simpan ke Server**.
 
-Catatan: tab Admin hanya sisi klien (perubahan tersimpan di browser). Untuk login/penyimpanan nyata, tambahkan Vercel Functions + Vercel KV/Blob atau Supabase.
+Lokal: `npm i && npx vercel dev` (isi `.env` dari `.env.example`).
+Kolom XLSX: id, nama, jenis, kecamatan, lat, lng, progres, rencana, nilai (juta Rp), pelaksana, target (YYYY-MM-DD).
