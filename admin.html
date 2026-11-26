@@ -150,4 +150,5 @@ $('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
   if(!D.length)throw new Error('Tidak ada proyek yang memiliki nama.');
   setDirty(true);render();toast(D.length+' proyek diimpor. Klik "Simpan ke Server" untuk menerapkan.');
  }catch(x){console.error('IMPORT ERROR:',x);toast('File tidak valid: '+(x.message||x),1)}e.target.value=''};
+ init();
 </script></body></html>
