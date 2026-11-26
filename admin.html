@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin – Monitoring Proyek Surabaya</title>
+<meta name="robots" content="noindex">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<script>try{var t=localStorage.getItem('tema')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-bs-theme',t)}catch(e){}</script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet">
+<link href="assets/app.css" rel="stylesheet">
+</head><body>
+
+<!-- LOGIN -->
+<div id="login" class="login-bg d-none"><div class="card p-4 p-md-5" style="width:100%;max-width:420px">
+ <div class="text-center mb-4"><i class="bi bi-shield-lock-fill text-primary" style="font-size:3rem"></i>
+  <h4 class="fw-bold mt-2 mb-0">Login Admin</h4><small class="text-muted">DPMPTSP Kota Surabaya</small></div>
+ <form id="lf"><div class="mb-3"><label class="form-label fw-semibold">Username</label><input id="lu" class="form-control form-control-lg" autocomplete="username" required></div>
+  <div class="mb-3"><label class="form-label fw-semibold">Password</label><div class="input-group"><input id="lp" type="password" class="form-control form-control-lg" autocomplete="current-password" required><button type="button" class="btn btn-outline-secondary" id="eye"><i class="bi bi-eye"></i></button></div></div>
+  <div id="le" class="alert alert-danger py-2 d-none"></div>
+  <button class="btn btn-primary btn-lg w-100 rounded-pill fw-bold" id="lb">Masuk</button></form>
+ <a href="/" class="text-center small mt-3">← Kembali ke halaman publik</a>
+</div></div>
+
+<!-- APP -->
+<div id="app" class="d-none d-flex">
+ <aside class="side p-3 d-flex flex-column" id="side">
+  <div class="d-flex align-items-center gap-2 mb-4 px-2"><i class="bi bi-droplet-half fs-2 text-warning"></i><div class="fw-bold lh-1">Kota Surabaya<br><small class="fw-normal opacity-75">Admin DPMPTSP</small></div></div>
+  <nav class="nav flex-column gap-1">
+   <a class="nav-link active" data-v="dash"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+   <a class="nav-link" data-v="list"><i class="bi bi-list-task me-2"></i>Daftar Proyek</a>
+   <a class="nav-link" href="/" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Lihat Situs Publik</a>
+  </nav>
+  <button class="btn btn-outline-light rounded-pill mt-auto mb-2" data-tema><i class="bi bi-moon-stars-fill"></i> Ganti tema</button>
+  <button class="btn btn-outline-light rounded-pill" id="out"><i class="bi bi-box-arrow-left"></i> Keluar</button>
+ </aside>
+ <div class="flex-grow-1 p-3 p-md-4" style="min-width:0">
+  <div class="d-flex align-items-center gap-2 mb-3">
+   <button class="btn btn-light d-lg-none" id="burger"><i class="bi bi-list"></i></button>
+   <h4 class="fw-bold mb-0" id="ttl">Dashboard</h4>
+   <span class="badge text-bg-warning ms-2 d-none" id="dirty">Belum disimpan</span>
+   <button class="btn btn-success rounded-pill ms-auto fw-bold" id="save"><i class="bi bi-cloud-arrow-up-fill"></i> Simpan ke Server</button>
+  </div>
+
+  <section id="v-dash">
+   <div class="row g-3 mb-3" id="ds"></div>
+   <div class="row g-3">
+    <div class="col-lg-4"><div class="card p-3 h-100 text-center"><div class="fw-bold mb-3 text-start">Progres Keseluruhan</div><div class="donut" id="dn"></div>
+     <div class="row mt-3 small"><div class="col"><div class="text-muted">Rencana</div><b id="pr"></b></div><div class="col"><div class="text-muted">Aktual</div><b id="pa"></b></div><div class="col"><div class="text-muted">Deviasi</div><b id="pd"></b></div></div></div></div>
+    <div class="col-lg-8"><div class="card p-3 h-100"><div class="fw-bold mb-2">Proyek Tertinggal (deviasi terburuk)</div><div id="worst"></div></div></div>
+   </div>
+   <div class="row g-3 mt-0"><div class="col-12"><div class="card p-3"><div class="fw-bold mb-1">Pengingat Jatuh Tempo</div><div class="small text-muted mb-2">Proyek belum selesai dengan target dalam 30 hari atau sudah lewat.</div><div id="soon"></div></div></div></div>
+   <div class="row g-3 mt-0"><div class="col-12"><div class="card p-3"><div class="d-flex flex-wrap align-items-center gap-2 mb-2"><div class="fw-bold me-auto">Laporan Ringkas</div><button class="btn btn-sm btn-outline-primary" id="lcp"><i class="bi bi-clipboard"></i> Salin</button><a class="btn btn-sm btn-outline-success" id="lwa" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Kirim WhatsApp</a></div><pre id="lap" class="small mb-0" style="white-space:pre-wrap;font-family:inherit"></pre></div></div></div>
+  </section>
+
+  <section id="v-list" class="d-none"><div class="card p-3">
+   <div class="d-flex flex-wrap gap-2 mb-3">
+    <input id="aq" class="form-control w-auto flex-grow-1" placeholder="Cari proyek...">
+    <button class="btn btn-primary" id="add"><i class="bi bi-plus-lg"></i> Tambah</button>
+    <button class="btn btn-outline-primary" id="imp"><i class="bi bi-upload"></i> Impor</button><input type="file" id="file" accept=".xlsx,.xls,.json" hidden>
+    <button class="btn btn-outline-primary" id="ex"><i class="bi bi-file-earmark-excel"></i> XLSX</button>
+    <button class="btn btn-outline-primary" id="ej"><i class="bi bi-filetype-json"></i> JSON</button>
+   </div>
+   <div class="table-responsive"><table class="table table-hover align-middle mb-0" id="tbl"></table></div>
+  </div></section>
+ </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="md" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><form class="modal-content" id="mf">
+ <div class="modal-header"><h5 class="modal-title fw-bold" id="mt">Proyek</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+ <div class="modal-body"><div class="row g-3">
+  <div class="col-md-8"><label class="form-label">Nama Proyek</label><input name="nama" class="form-control" required></div>
+  <div class="col-md-4"><label class="form-label">Jenis</label><select name="jenis" class="form-select"><option>Rumah Pompa</option><option>Drainase</option></select></div>
+  <div class="col-md-6"><label class="form-label">Kecamatan</label><input name="kecamatan" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Pelaksana</label><input name="pelaksana" class="form-control"></div>
+  <div class="col-md-3"><label class="form-label">Progres (%)</label><input name="progres" type="number" min="0" max="100" class="form-control" required></div>
+  <div class="col-md-3"><label class="form-label">Rencana (%)</label><input name="rencana" type="number" min="0" max="100" class="form-control" required></div>
+  <div class="col-md-3"><label class="form-label">Nilai (Juta Rp)</label><input name="nilai" type="number" min="0" step="any" class="form-control"></div>
+  <div class="col-md-3"><label class="form-label">Target Selesai</label><input name="target" type="date" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Latitude</label><input name="lat" type="number" step="any" class="form-control" required></div>
+  <div class="col-md-6"><label class="form-label">Longitude</label><input name="lng" type="number" step="any" class="form-control" required></div>
+  <div class="col-12"><button type="button" class="btn btn-outline-primary btn-sm" id="pick"><i class="bi bi-geo-alt"></i> Pilih lokasi di peta</button><div id="pm" class="mt-2 d-none"></div></div>
+  <div class="col-12"><label class="form-label">Foto lokasi <small class="text-muted">(tautan gambar https, opsional)</small></label><input name="foto" type="url" pattern="https://.*" class="form-control" placeholder="https://..."></div>
+  <div class="col-12"><label class="form-label">Catatan lapangan <small class="text-muted">(tampil di halaman publik, maks. 300 karakter)</small></label><textarea name="catatan" maxlength="300" rows="2" class="form-control"></textarea></div>
+ </div></div>
+ <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary">Simpan</button></div>
+</form></div></div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="toast" class="toast align-items-center text-bg-dark border-0"><div class="d-flex"><div class="toast-body" id="tb"></div></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="assets/common.js"></script>
+<script>
+const $=s=>document.querySelector(s);let D=[],dirty=false,editId=null;
+const modal=()=>bootstrap.Modal.getOrCreateInstance($('#md'));
+const toast=(m,bad)=>{$('#tb').textContent=m;$('#toast').className='toast align-items-center border-0 text-bg-'+(bad?'danger':'success');bootstrap.Toast.getOrCreateInstance($('#toast')).show()};
+const setDirty=v=>{dirty=v;$('#dirty').classList.toggle('d-none',!v)};
+const api=(u,o={})=>fetch(u,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...o});
+function showLogin(){$('#app').classList.add('d-none');$('#login').classList.remove('d-none')}
+async function enter(){$('#login').classList.add('d-none');$('#app').classList.remove('d-none');D=await getData();setDirty(false);render()}
+async function init(){try{const r=await (await api('/api/auth')).json();r.authed?enter():showLogin()}catch(e){showLogin();$('#le').textContent='API tidak tersedia. Jalankan dengan "vercel dev" atau deploy ke Vercel.';$('#le').classList.remove('d-none')}}
+$('#lf').onsubmit=async e=>{e.preventDefault();$('#lb').disabled=true;$('#le').classList.add('d-none');
+ try{const r=await api('/api/auth',{method:'POST',body:JSON.stringify({username:$('#lu').value,password:$('#lp').value})});const j=await r.json();
+  if(r.ok){$('#lp').value='';enter()}else{$('#le').textContent=j.error||'Gagal login';$('#le').classList.remove('d-none')}}
+ catch(x){$('#le').textContent='API tidak tersedia.';$('#le').classList.remove('d-none')}$('#lb').disabled=false};
+$('#eye').onclick=()=>{const i=$('#lp');i.type=i.type=='password'?'text':'password'};
+$('#out').onclick=async()=>{await api('/api/auth',{method:'DELETE'});showLogin()};
+$('#burger').onclick=()=>$('#side').classList.toggle('open');
+document.querySelectorAll('[data-v]').forEach(a=>a.onclick=()=>{document.querySelectorAll('[data-v]').forEach(x=>x.classList.remove('active'));a.classList.add('active');
+ ['dash','list'].forEach(v=>$('#v-'+v).classList.toggle('d-none',v!=a.dataset.v));$('#ttl').textContent=a.textContent.trim();$('#side').classList.remove('open')});
+$('#save').onclick=async()=>{const b=$('#save');b.disabled=true;
+ try{const r=await api('/api/proyek',{method:'PUT',body:JSON.stringify(D)});const j=await r.json();
+  if(r.status==401){toast('Sesi berakhir, login ulang.',1);showLogin()}else if(r.ok){setDirty(false);toast('Tersimpan: '+j.count+' proyek.')}else toast(j.error||'Gagal menyimpan',1)}
+ catch(e){toast('Gagal terhubung ke server.',1)}b.disabled=false};
+function dash(){const c=k=>cnt(D,k),a=avg(D,'progres'),r=avg(D,'rencana'),d=a-r,tot=D.reduce((x,p)=>x+ +p.nilai,0);
+ const it=[['bi-collection-fill','#1d4ed8','Total Proyek',D.length],['bi-play-fill','#16a34a','Berjalan',c('berjalan')],['bi-check2-circle','#2563eb','Selesai',c('selesai')],['bi-alarm-fill','#dc2626','Terlambat',c('terlambat')],['bi-cash-stack','#0a2463','Total Nilai Kontrak',rp(tot)]];
+ $('#ds').innerHTML=it.map(([i,c,l,v])=>`<div class="col-6 col-xl"><div class="card p-3 stat"><div class="ic" style="background:${c}"><i class="bi ${i}"></i></div><div><b>${v}</b><span>${l}</span></div></div></div>`).join('');
+ $('#dn').style.background=`conic-gradient(#2563eb ${a*3.6}deg,#dbe5f7 0)`;$('#dn').innerHTML=`<div><span>${a}%<small>Progres Fisik</small></span></div>`;
+ $('#pr').textContent=r+'%';$('#pa').textContent=a+'%';$('#pd').innerHTML=`<span class="${d<0?'text-danger':'text-success'}">${d>0?'+':''}${d}%</span>`;
+ $('#worst').innerHTML=[...D].filter(p=>p.progres<100).sort((x,y)=>dev(x)-dev(y)).slice(0,5).map(p=>`<div class="d-flex align-items-center gap-3 py-2 border-bottom"><div class="flex-grow-1"><div class="fw-semibold">${esc(p.nama)}</div><div class="progress mt-1"><div class="progress-bar" style="width:${p.progres}%"></div></div></div><div class="text-end small"><b>${p.progres}%</b><div class="${dev(p)<0?'text-danger':'text-success'}">${dev(p)>0?'+':''}${dev(p)}%</div></div>${pill(p)}</div>`).join('')||'<div class="text-muted">Belum ada data.</div>';
+ $('#soon').innerHTML=D.filter(p=>{const x=sisa(p);return x!=null&&x<=30}).sort((x,y)=>sisa(x)-sisa(y)).map(p=>`<div class="d-flex align-items-center gap-3 py-2 border-bottom"><div class="flex-grow-1"><div class="fw-semibold">${esc(p.nama)}</div><small class="text-muted">Kec. ${esc(p.kecamatan)} · ${esc(p.pelaksana)}</small></div><div class="text-end small"><b class="${sisa(p)<0?'late':''}">${sisaTxt(p)}</b><div class="text-muted">${p.progres}% dari target ${tgl(p.target)}</div></div>${pill(p)}</div>`).join('')||'<div class="text-muted">Tidak ada proyek yang mendekati jatuh tempo.</div>'}
+function table(){const q=$('#aq').value.toLowerCase();
+ $('#tbl').innerHTML='<thead class="table-light"><tr><th>Proyek</th><th>Jenis</th><th>Progres</th><th>Rencana</th><th>Deviasi</th><th>Nilai</th><th>Target</th><th>Status</th><th></th></tr></thead><tbody>'+
+ D.filter(p=>!q||(p.nama+p.kecamatan+p.pelaksana).toLowerCase().includes(q)).map(p=>`<tr><td><b>${esc(p.nama)}</b><div class="small text-muted">${esc(p.kecamatan)} · ${esc(p.pelaksana)}</div></td><td>${esc(p.jenis)}</td><td><div class="input-group input-group-sm qp"><input type="number" min="0" max="100" class="form-control" data-q="${p.id}" value="${p.progres}" aria-label="Progres ${esc(p.nama)}"><span class="input-group-text">%</span></div></td><td>${p.rencana}%</td><td class="${dev(p)<0?'text-danger':'text-success'} fw-bold">${dev(p)>0?'+':''}${dev(p)}%</td><td>${rp(p.nilai)}</td><td>${tgl(p.target)}</td><td>${pill(p)}</td><td class="text-nowrap"><button class="btn btn-sm btn-light" data-e="${p.id}" title="Edit"><i class="bi bi-pencil"></i></button> <button class="btn btn-sm btn-light" data-c="${p.id}" title="Duplikat"><i class="bi bi-copy"></i></button> <button class="btn btn-sm btn-light text-danger" data-d="${p.id}"><i class="bi bi-trash"></i></button></td></tr>`).join('')+'</tbody>';
+ document.querySelectorAll('[data-q]').forEach(i=>i.onchange=()=>{const v=Math.max(0,Math.min(100,+i.value||0));D=D.map(p=>p.id==i.dataset.q?{...p,progres:v,riwayat:catat(p.riwayat,v)}:p);setDirty(true);render();toast('Progres diperbarui. Klik "Simpan ke Server" untuk menerapkan.')});
+ document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const {id,riwayat,...c}=D.find(p=>p.id==b.dataset.c);openForm({...c,nama:c.nama+' (salinan)',progres:0});editId=null;$('#mt').textContent='Duplikat Proyek'});
+ document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>openForm(D.find(p=>p.id==b.dataset.e)));
+ document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const p=D.find(x=>x.id==b.dataset.d);if(confirm('Hapus "'+p.nama+'"?')){D=D.filter(x=>x!==p);setDirty(true);render()}})}
+function render(){dash();table();$('#lap').textContent=laporan(D);$('#lwa').href='https://wa.me/?text='+encodeURIComponent(laporan(D))}
+$('#lcp').onclick=()=>navigator.clipboard?.writeText(laporan(D)).then(()=>toast('Laporan disalin.'));
+function openForm(p){editId=p?p.id:null;$('#mt').textContent=p?'Edit Proyek':'Tambah Proyek';const f=$('#mf');f.reset();
+ $('#pm').classList.add('d-none');if(p)Object.keys(p).forEach(k=>f.elements[k]&&(f.elements[k].value=p[k]));else{f.elements.lat.value=-7.2756;f.elements.lng.value=112.7378;f.elements.progres.value=0;f.elements.rencana.value=0}modal().show()}
+$('#add').onclick=()=>openForm();
+$('#mf').onsubmit=e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target));
+ ['progres','rencana','nilai','lat','lng'].forEach(k=>o[k]=+o[k]||0);o.progres=Math.min(100,o.progres);o.rencana=Math.min(100,o.rencana);
+ if(editId!=null)D=D.map(p=>p.id==editId?{...p,...o,riwayat:(p.progres!=o.progres||!(p.riwayat||[]).length)?catat(p.riwayat,o.progres):p.riwayat}:p);else D.push({id:Math.max(0,...D.map(p=>+p.id))+1,...o,riwayat:catat([],o.progres)});
+ modal().hide();setDirty(true);render()};
+$('#aq').oninput=table;
+const dl=(b,n)=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()};
+$('#ej').onclick=()=>dl(new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),'proyek.json');
+$('#ex').onclick=()=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(D.map(({riwayat,...p})=>p)),'proyek');XLSX.writeFile(wb,'proyek.xlsx')};
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+ try{
+  let rows=[];const name=f.name.toLowerCase();
+  if(name.endsWith('.json')){rows=JSON.parse(await f.text());if(!Array.isArray(rows))throw new Error('Format JSON harus berupa array data proyek.');}
+  else{
+   if(typeof XLSX==='undefined')throw new Error('Library XLSX belum termuat. Refresh halaman lalu coba lagi.');
+   const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});
+   if(!wb.SheetNames.length)throw new Error('Workbook tidak memiliki sheet.');
+   rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
+  }
+  if(!rows.length)throw new Error('File tidak memiliki data.');
+  const key=k=>String(k).trim().toLowerCase().replace(/\s+/g,'');
+  rows=rows.map(r=>{const x={};Object.keys(r).forEach(k=>x[key(k)]=r[k]);return x;});
+  const required=['nama','jenis','kecamatan','lat','lng','progres','rencana','nilai','pelaksana','target'];
+  const missing=required.filter(k=>!(k in rows[0]));
+  if(missing.length)throw new Error('Kolom tidak lengkap: '+missing.join(', '));
+  const toNum=v=>{const n=Number(String(v??'').replace(/[^0-9eE+\-.]/g,''));return Number.isFinite(n)?n:0};
+  D=rows.map((r,i)=>({id:toNum(r.id)||i+1,nama:String(r.nama||'').trim(),jenis:String(r.jenis||'').toLowerCase().includes('drain')?'Drainase':'Rumah Pompa',kecamatan:String(r.kecamatan||'').trim(),lat:toNum(r.lat),lng:toNum(r.lng),progres:Math.max(0,Math.min(100,toNum(r.progres))),rencana:Math.max(0,Math.min(100,toNum(r.rencana))),nilai:Math.max(0,toNum(r.nilai)),pelaksana:String(r.pelaksana||'-').trim(),target:String(r.target||'').trim().slice(0,10),catatan:String(r.catatan||'').trim().slice(0,300),foto:/^https:\/\//.test(String(r.foto||''))?String(r.foto):'',riwayat:Array.isArray(r.riwayat)?r.riwayat:[]})).map(p=>({...p,riwayat:p.riwayat.length?p.riwayat:catat([],p.progres)})).filter(p=>p.nama);
+  if(!D.length)throw new Error('Tidak ada proyek yang memiliki nama.');
+  setDirty(true);render();toast(D.length+' proyek diimpor. Klik "Simpan ke Server" untuk menerapkan.');
+ }catch(x){console.error('IMPORT ERROR:',x);toast('File tidak valid: '+(x.message||x),1)}e.target.value=''};
+ let pm,pk;const OSM='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+$('#pick').onclick=()=>{const b=$('#pm'),f=$('#mf').elements;b.classList.toggle('d-none');if(b.classList.contains('d-none'))return;
+ const ll=[+f.lat.value||-7.2756,+f.lng.value||112.7378];
+ if(!pm){pm=L.map(b).setView(ll,14);L.tileLayer(OSM,{attribution:'© OpenStreetMap · © CARTO'}).addTo(pm);pk=L.marker(ll).addTo(pm);
+  pm.on('click',e=>{pk.setLatLng(e.latlng);f.lat.value=e.latlng.lat.toFixed(6);f.lng.value=e.latlng.lng.toFixed(6)})}
+ else{pm.setView(ll,14);pk.setLatLng(ll)}setTimeout(()=>pm.invalidateSize(),60)};
+addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+initTema();
+ init();
+</script></body></html>
