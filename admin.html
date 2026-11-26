@@ -49,12 +49,14 @@
     <div class="col-lg-8"><div class="card p-3 h-100"><div class="fw-bold mb-2">Proyek Tertinggal (deviasi terburuk)</div><div id="worst"></div></div></div>
    </div>
    <div class="row g-3 mt-0"><div class="col-12"><div class="card p-3"><div class="fw-bold mb-1">Pengingat Jatuh Tempo</div><div class="small text-muted mb-2">Proyek belum selesai dengan target dalam 30 hari atau sudah lewat.</div><div id="soon"></div></div></div></div>
+   <div class="row g-3 mt-0"><div class="col-12"><div class="card p-3"><div class="fw-bold mb-1">Tren Progres Rata-rata</div><div class="small text-muted mb-2">Dihitung dari riwayat pembaruan seluruh proyek.</div><div id="trend"></div></div></div></div>
    <div class="row g-3 mt-0"><div class="col-12"><div class="card p-3"><div class="d-flex flex-wrap align-items-center gap-2 mb-2"><div class="fw-bold me-auto">Laporan Ringkas</div><button class="btn btn-sm btn-outline-primary" id="lcp"><i class="bi bi-clipboard"></i> Salin</button><a class="btn btn-sm btn-outline-success" id="lwa" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Kirim WhatsApp</a></div><pre id="lap" class="small mb-0" style="white-space:pre-wrap;font-family:inherit"></pre></div></div></div>
   </section>
 
   <section id="v-list" class="d-none"><div class="card p-3">
    <div class="d-flex flex-wrap gap-2 mb-3">
     <input id="aq" class="form-control w-auto flex-grow-1" placeholder="Cari proyek...">
+    <select id="as" class="form-select w-auto" aria-label="Filter status"><option value="">Semua status</option><option value="terlambat">Terlambat</option><option value="perhatian">Perlu perhatian</option><option value="berjalan">Berjalan</option><option value="selesai">Selesai</option></select>
     <button class="btn btn-primary" id="add"><i class="bi bi-plus-lg"></i> Tambah</button>
     <button class="btn btn-outline-primary" id="imp"><i class="bi bi-upload"></i> Impor</button><input type="file" id="file" accept=".xlsx,.xls,.json" hidden>
     <button class="btn btn-outline-primary" id="ex"><i class="bi bi-file-earmark-excel"></i> XLSX</button>
@@ -121,14 +123,20 @@ function dash(){const c=k=>cnt(D,k),a=avg(D,'progres'),r=avg(D,'rencana'),d=a-r,
  $('#pr').textContent=r+'%';$('#pa').textContent=a+'%';$('#pd').innerHTML=`<span class="${d<0?'text-danger':'text-success'}">${d>0?'+':''}${d}%</span>`;
  $('#worst').innerHTML=[...D].filter(p=>p.progres<100).sort((x,y)=>dev(x)-dev(y)).slice(0,5).map(p=>`<div class="d-flex align-items-center gap-3 py-2 border-bottom"><div class="flex-grow-1"><div class="fw-semibold">${esc(p.nama)}</div><div class="progress mt-1"><div class="progress-bar" style="width:${p.progres}%"></div></div></div><div class="text-end small"><b>${p.progres}%</b><div class="${dev(p)<0?'text-danger':'text-success'}">${dev(p)>0?'+':''}${dev(p)}%</div></div>${pill(p)}</div>`).join('')||'<div class="text-muted">Belum ada data.</div>';
  $('#soon').innerHTML=D.filter(p=>{const x=sisa(p);return x!=null&&x<=30}).sort((x,y)=>sisa(x)-sisa(y)).map(p=>`<div class="d-flex align-items-center gap-3 py-2 border-bottom"><div class="flex-grow-1"><div class="fw-semibold">${esc(p.nama)}</div><small class="text-muted">Kec. ${esc(p.kecamatan)} · ${esc(p.pelaksana)}</small></div><div class="text-end small"><b class="${sisa(p)<0?'late':''}">${sisaTxt(p)}</b><div class="text-muted">${p.progres}% dari target ${tgl(p.target)}</div></div>${pill(p)}</div>`).join('')||'<div class="text-muted">Tidak ada proyek yang mendekati jatuh tempo.</div>'}
-function table(){const q=$('#aq').value.toLowerCase();
- $('#tbl').innerHTML='<thead class="table-light"><tr><th>Proyek</th><th>Jenis</th><th>Progres</th><th>Rencana</th><th>Deviasi</th><th>Nilai</th><th>Target</th><th>Status</th><th></th></tr></thead><tbody>'+
- D.filter(p=>!q||(p.nama+p.kecamatan+p.pelaksana).toLowerCase().includes(q)).map(p=>`<tr><td><b>${esc(p.nama)}</b><div class="small text-muted">${esc(p.kecamatan)} · ${esc(p.pelaksana)}</div></td><td>${esc(p.jenis)}</td><td><div class="input-group input-group-sm qp"><input type="number" min="0" max="100" class="form-control" data-q="${p.id}" value="${p.progres}" aria-label="Progres ${esc(p.nama)}"><span class="input-group-text">%</span></div></td><td>${p.rencana}%</td><td class="${dev(p)<0?'text-danger':'text-success'} fw-bold">${dev(p)>0?'+':''}${dev(p)}%</td><td>${rp(p.nilai)}</td><td>${tgl(p.target)}</td><td>${pill(p)}</td><td class="text-nowrap"><button class="btn btn-sm btn-light" data-e="${p.id}" title="Edit"><i class="bi bi-pencil"></i></button> <button class="btn btn-sm btn-light" data-c="${p.id}" title="Duplikat"><i class="bi bi-copy"></i></button> <button class="btn btn-sm btn-light text-danger" data-d="${p.id}"><i class="bi bi-trash"></i></button></td></tr>`).join('')+'</tbody>';
- document.querySelectorAll('[data-q]').forEach(i=>i.onchange=()=>{const v=Math.max(0,Math.min(100,+i.value||0));D=D.map(p=>p.id==i.dataset.q?{...p,progres:v,riwayat:catat(p.riwayat,v)}:p);setDirty(true);render();toast('Progres diperbarui. Klik "Simpan ke Server" untuk menerapkan.')});
+let SK='',SD=1;const TH=[['nama','Proyek'],['jenis','Jenis'],['progres','Progres'],['rencana','Rencana'],['dev','Deviasi'],['nilai','Nilai'],['target','Target'],['st','Status']];
+const val=(p,k)=>k=='dev'?dev(p):k=='st'?['terlambat','perhatian','berjalan','selesai'].indexOf(st(p)):p[k];
+function rows(){const q=$('#aq').value.toLowerCase(),s=$('#as').value,r=D.filter(p=>(!q||(p.nama+p.kecamatan+p.pelaksana).toLowerCase().includes(q))&&(!s||st(p)==s));
+ if(SK)r.sort((a,b)=>{const x=val(a,SK),y=val(b,SK);return(typeof x=='string'?x.localeCompare(y):x-y)*SD});return r}
+function table(){
+ $('#tbl').innerHTML='<thead class="table-light"><tr>'+TH.map(([k,l])=>`<th data-s="${k}" style="cursor:pointer;white-space:nowrap">${l}${SK==k?(SD>0?' ▲':' ▼'):''}</th>`).join('')+'<th></th></tr></thead><tbody>'+
+ rows().map(p=>`<tr><td><b>${esc(p.nama)}</b><div class="small text-muted">${esc(p.kecamatan)} · ${esc(p.pelaksana)}</div></td><td>${esc(p.jenis)}</td><td><div class="input-group input-group-sm qp"><input type="number" min="0" max="100" class="form-control" data-q="${p.id}" value="${p.progres}" aria-label="Progres ${esc(p.nama)}"><span class="input-group-text">%</span></div></td><td>${p.rencana}%</td><td class="${dev(p)<0?'text-danger':'text-success'} fw-bold">${dev(p)>0?'+':''}${dev(p)}%</td><td>${rp(p.nilai)}</td><td>${tgl(p.target)}</td><td>${pill(p)}</td><td class="text-nowrap"><button class="btn btn-sm btn-light" data-e="${p.id}" title="Edit"><i class="bi bi-pencil"></i></button> <button class="btn btn-sm btn-light" data-c="${p.id}" title="Duplikat"><i class="bi bi-copy"></i></button> <button class="btn btn-sm btn-light text-danger" data-d="${p.id}"><i class="bi bi-trash"></i></button></td></tr>`).join('')+'</tbody>';
+ document.querySelectorAll('#tbl th[data-s]').forEach(h=>h.onclick=()=>{SK==h.dataset.s?SD=-SD:(SK=h.dataset.s,SD=1);table()});
+ document.querySelectorAll('[data-q]').forEach(i=>i.onchange=()=>{const v=Math.max(0,Math.min(100,+i.value||0));D=D.map(p=>p.id==i.dataset.q?{...p,progres:v,riwayat:catat(p.riwayat,v)}:p);setDirty(true);dash();lapor();const tr=i.closest('tr'),p=D.find(x=>x.id==i.dataset.q);tr.children[4].className=(dev(p)<0?'text-danger':'text-success')+' fw-bold';tr.children[4].textContent=(dev(p)>0?'+':'')+dev(p)+'%';tr.children[7].innerHTML=pill(p);toast('Progres diperbarui. Klik "Simpan ke Server" untuk menerapkan.')});
  document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const {id,riwayat,...c}=D.find(p=>p.id==b.dataset.c);openForm({...c,nama:c.nama+' (salinan)',progres:0});editId=null;$('#mt').textContent='Duplikat Proyek'});
  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>openForm(D.find(p=>p.id==b.dataset.e)));
  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const p=D.find(x=>x.id==b.dataset.d);if(confirm('Hapus "'+p.nama+'"?')){D=D.filter(x=>x!==p);setDirty(true);render()}})}
-function render(){dash();table();$('#lap').textContent=laporan(D);$('#lwa').href='https://wa.me/?text='+encodeURIComponent(laporan(D))}
+function lapor(){$('#lap').textContent=laporan(D);$('#lwa').href='https://wa.me/?text='+encodeURIComponent(laporan(D));$('#trend').innerHTML=tren(D)}
+function render(){dash();table();lapor()}
 $('#lcp').onclick=()=>navigator.clipboard?.writeText(laporan(D)).then(()=>toast('Laporan disalin.'));
 function openForm(p){editId=p?p.id:null;$('#mt').textContent=p?'Edit Proyek':'Tambah Proyek';const f=$('#mf');f.reset();
  $('#pm').classList.add('d-none');if(p)Object.keys(p).forEach(k=>f.elements[k]&&(f.elements[k].value=p[k]));else{f.elements.lat.value=-7.2756;f.elements.lng.value=112.7378;f.elements.progres.value=0;f.elements.rencana.value=0}modal().show()}
@@ -137,7 +145,7 @@ $('#mf').onsubmit=e=>{e.preventDefault();const o=Object.fromEntries(new FormData
  ['progres','rencana','nilai','lat','lng'].forEach(k=>o[k]=+o[k]||0);o.progres=Math.min(100,o.progres);o.rencana=Math.min(100,o.rencana);
  if(editId!=null)D=D.map(p=>p.id==editId?{...p,...o,riwayat:(p.progres!=o.progres||!(p.riwayat||[]).length)?catat(p.riwayat,o.progres):p.riwayat}:p);else D.push({id:Math.max(0,...D.map(p=>+p.id))+1,...o,riwayat:catat([],o.progres)});
  modal().hide();setDirty(true);render()};
-$('#aq').oninput=table;
+$('#aq').oninput=$('#as').onchange=table;
 const dl=(b,n)=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()};
 $('#ej').onclick=()=>dl(new Blob([JSON.stringify(D,null,1)],{type:'application/json'}),'proyek.json');
 $('#ex').onclick=()=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(D.map(({riwayat,...p})=>p)),'proyek');XLSX.writeFile(wb,'proyek.xlsx')};

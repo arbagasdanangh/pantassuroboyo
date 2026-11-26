@@ -28,3 +28,9 @@ Catatan: ikon PWA berupa SVG sederhana (`icon.svg`); ganti dengan logo resmi bil
 
 ## v3.2 — perbaikan
 Halaman publik tidak lagi kosong bila plugin cluster/Leaflet dari CDN gagal dimuat: data (statistik, daftar, grafik) dimuat lebih dulu, peta menjadi komponen opsional dengan pesan galat dan fallback tanpa cluster. Service worker kini memakai jaringan-dulu untuk file sendiri agar JS/CSS lama tidak tercampur dengan versi baru.
+
+## v3.3
+**Perbaikan** — peta dibangun bertahap (gagal satu bagian tidak mematikan yang lain), memuat ulang Leaflet/cluster dari CDN cadangan (jsDelivr, unpkg) bila CDN utama gagal, dan menampilkan penyebab galat di kotak peta. Klik pada "Paling Tertinggal" dan "Kinerja Pelaksana" tidak lagi error. Service worker tidak pernah menyimpan respons CDN yang gagal.
+
+**Publik** — ★ Pantau proyek (tersimpan di perangkat) + filter Pantauan, kartu Per Jenis Proyek, Kinerja Pelaksana, pintasan `/` untuk mencari.
+**Admin** — grafik Tren Progres Rata-rata, filter status tabel, urut kolom (klik judul kolom), edit cepat progres tanpa tabel melompat.

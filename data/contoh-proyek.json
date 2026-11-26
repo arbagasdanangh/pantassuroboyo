@@ -1,0 +1,154 @@
+[
+ {
+  "id": 1,
+  "nama": "Rumah Pompa Contoh Wonokromo",
+  "jenis": "Rumah Pompa",
+  "kecamatan": "Wonokromo",
+  "lat": -7.2955,
+  "lng": 112.7377,
+  "progres": 62,
+  "rencana": 75,
+  "nilai": 18500,
+  "pelaksana": "PT Contoh Karya",
+  "target": "2027-03-26",
+  "catatan": "Pengerjaan struktur bawah tertunda cuaca.",
+  "riwayat": [
+   {
+    "t": "2026-07-29",
+    "p": 10
+   },
+   {
+    "t": "2026-08-28",
+    "p": 28
+   },
+   {
+    "t": "2026-09-27",
+    "p": 45
+   },
+   {
+    "t": "2026-10-27",
+    "p": 62
+   }
+  ]
+ },
+ {
+  "id": 2,
+  "nama": "Saluran Contoh Gubeng",
+  "jenis": "Drainase",
+  "kecamatan": "Gubeng",
+  "lat": -7.2756,
+  "lng": 112.7516,
+  "progres": 88,
+  "rencana": 85,
+  "nilai": 9200,
+  "pelaksana": "CV Contoh Jaya",
+  "target": "2026-12-16",
+  "catatan": "",
+  "riwayat": [
+   {
+    "t": "2026-07-29",
+    "p": 20
+   },
+   {
+    "t": "2026-08-28",
+    "p": 50
+   },
+   {
+    "t": "2026-09-27",
+    "p": 72
+   },
+   {
+    "t": "2026-10-27",
+    "p": 88
+   }
+  ]
+ },
+ {
+  "id": 3,
+  "nama": "Rumah Pompa Contoh Rungkut",
+  "jenis": "Rumah Pompa",
+  "kecamatan": "Rungkut",
+  "lat": -7.334,
+  "lng": 112.777,
+  "progres": 100,
+  "rencana": 100,
+  "nilai": 24000,
+  "pelaksana": "PT Contoh Karya",
+  "target": "2026-11-11",
+  "catatan": "Selesai dan sudah beroperasi.",
+  "riwayat": [
+   {
+    "t": "2026-07-29",
+    "p": 30
+   },
+   {
+    "t": "2026-08-28",
+    "p": 60
+   },
+   {
+    "t": "2026-09-27",
+    "p": 85
+   },
+   {
+    "t": "2026-10-27",
+    "p": 100
+   }
+  ]
+ },
+ {
+  "id": 4,
+  "nama": "Saluran Contoh Tandes",
+  "jenis": "Drainase",
+  "kecamatan": "Tandes",
+  "lat": -7.256,
+  "lng": 112.675,
+  "progres": 35,
+  "rencana": 55,
+  "nilai": 7400,
+  "pelaksana": "CV Contoh Mandiri",
+  "target": "2026-11-21",
+  "catatan": "Pembebasan lahan belum tuntas.",
+  "riwayat": [
+   {
+    "t": "2026-08-28",
+    "p": 8
+   },
+   {
+    "t": "2026-09-27",
+    "p": 20
+   },
+   {
+    "t": "2026-10-27",
+    "p": 35
+   }
+  ]
+ },
+ {
+  "id": 5,
+  "nama": "Rumah Pompa Contoh Sukolilo",
+  "jenis": "Rumah Pompa",
+  "kecamatan": "Sukolilo",
+  "lat": -7.293,
+  "lng": 112.8,
+  "progres": 71,
+  "rencana": 70,
+  "nilai": 15100,
+  "pelaksana": "PT Contoh Tirta",
+  "target": "2027-01-10",
+  "catatan": "",
+  "riwayat": [
+   {
+    "t": "2026-08-28",
+    "p": 15
+   },
+   {
+    "t": "2026-09-27",
+    "p": 40
+   },
+   {
+    "t": "2026-10-27",
+    "p": 71
+   }
+  ]
+ }
+]

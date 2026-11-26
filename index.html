@@ -36,6 +36,7 @@
    <button class="chip on" data-j="">Semua</button><button class="chip" data-j="Rumah Pompa"><i class="bi bi-building"></i> Rumah Pompa</button><button class="chip" data-j="Drainase"><i class="bi bi-water"></i> Drainase</button>
    <select id="fs" class="form-select chip w-auto" aria-label="Filter status"><option value="">Semua Status</option><option value="berjalan">Berjalan</option><option value="perhatian">Perlu Perhatian</option><option value="terlambat">Terlambat</option><option value="selesai">Selesai</option></select>
    <select id="so" class="form-select chip w-auto" aria-label="Urutkan"><option value="dev">Deviasi terburuk</option><option value="tgt">Target terdekat</option><option value="prog">Progres tertinggi</option><option value="nama">Nama A–Z</option><option value="dekat" disabled>Terdekat dari saya</option></select>
+   <button class="chip" id="fv" title="Tampilkan proyek yang Anda pantau"><i class="bi bi-star-fill text-warning"></i> Pantauan <span id="fn"></span></button>
    <button class="chip d-none" id="kx"></button>
   </div>
  </div>
@@ -61,6 +62,8 @@
  <section id="t-stat" class="row g-3 mt-0 d-none">
   <div class="col-12"><div class="card p-3"><div class="fw-bold mb-2">Sebaran Status Proyek</div><div class="sbar" id="sbar"></div><div class="d-flex flex-wrap gap-3 small mt-2" id="slg"></div></div></div>
   <div class="col-12"><div class="card p-3"><div class="fw-bold mb-1">Pembaruan Terbaru</div><div id="feed"></div></div></div>
+  <div class="col-lg-6"><div class="card p-3 h-100"><div class="fw-bold mb-2">Per Jenis Proyek</div><div id="jenis"></div></div></div>
+  <div class="col-lg-6"><div class="card p-3 h-100"><div class="fw-bold">Kinerja Pelaksana</div><div class="small text-muted mb-2">Diurutkan dari deviasi terburuk. Klik untuk menyaring proyeknya.</div><div id="pel"></div></div></div>
   <div class="col-lg-7"><div class="card p-3 h-100"><div class="fw-bold">Progres per Kecamatan</div>
    <div class="small text-muted mb-2">Bar biru = progres aktual, garis emas = rencana. Klik untuk melihat di peta.</div><div id="kec"></div></div></div>
   <div class="col-lg-5"><div class="card p-3 h-100"><div class="fw-bold mb-2">Paling Tertinggal dari Rencana</div><div id="worst"></div></div></div>
@@ -74,7 +77,7 @@
 <script src="assets/common.js"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
-let D=[],map,layer,base,J='',K='',sel=null,sat=false,ME=null;
+let D=[],map,layer,base,J='',K='',sel=null,sat=false,ME=null,F=false,FAV=new Set();
 const WAVE='M0 8Q25 0 50 8T100 8T150 8T200 8T250 8T300 8T350 8T400 8V240H0Z';
 const EMPTY='<div class="text-center text-muted py-4"><i class="bi bi-geo-alt fs-1 d-block"></i>Pilih penanda di peta atau daftar proyek untuk melihat detail.</div>';
 
@@ -94,7 +97,7 @@ function stats(){const c=k=>cnt(D,k);
 
 const SORT={dev:(a,b)=>dev(a)-dev(b),tgt:(a,b)=>(a.progres>=100)-(b.progres>=100)||String(a.target||'9').localeCompare(b.target||'9'),prog:(a,b)=>b.progres-a.progres,nama:(a,b)=>a.nama.localeCompare(b.nama),dekat:(a,b)=>jarak(ME[0],ME[1],a.lat,a.lng)-jarak(ME[0],ME[1],b.lat,b.lng)};
 function filt(){const q=$('#q').value.toLowerCase(),s=$('#fs').value;
- return D.filter(p=>(!q||(p.nama+p.kecamatan+p.pelaksana).toLowerCase().includes(q))&&(!J||p.jenis==J)&&(!K||p.kecamatan==K)&&(!s||st(p)==s)).sort(SORT[$('#so').value])}
+ return D.filter(p=>(!q||(p.nama+p.kecamatan+p.pelaksana).toLowerCase().includes(q))&&(!J||p.jenis==J)&&(!K||p.kecamatan==K)&&(!F||FAV.has(p.id))&&(!s||st(p)==s)).sort(SORT[$('#so').value])}
 
 function show(p){sel=p.id;const d=dev(p),sx=sisa(p),wa='https://wa.me/?text='+encodeURIComponent(`${p.nama} – progres ${p.progres}% (${LBL[st(p)]}). `+location.origin+location.pathname+'#p'+p.id);
  history.replaceState(null,'','#p'+p.id);
@@ -108,17 +111,22 @@ function show(p){sel=p.id;const d=dev(p),sx=sisa(p),wa='https://wa.me/?text='+en
  <li class="d-flex justify-content-between py-1"><span class="text-muted">Target Selesai</span><b>${tgl(p.target)}${sx!=null?` <span class="${sx<0?'late':'text-muted'} fw-normal">(${sisaTxt(p)})</span>`:''}</b></li></ul>
  <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-primary rounded-pill" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}"><i class="bi bi-sign-turn-right"></i> Petunjuk Arah</a>
  <a class="btn btn-outline-success rounded-pill" target="_blank" rel="noopener" href="${wa}"><i class="bi bi-whatsapp"></i> Bagikan</a>
+ <button class="btn btn-outline-warning rounded-pill" data-fav="${p.id}">${favTxt(p.id)}</button>
  <button class="btn btn-outline-secondary rounded-pill" data-copy><i class="bi bi-link-45deg"></i> Salin tautan</button></div>`;
- if(map)map.flyTo([p.lat,p.lng],15,{duration:.6});$$('.pitem').forEach(e=>e.classList.toggle('on',e.dataset.id==p.id))}
-$('#detail').onclick=e=>{const b=e.target.closest('[data-copy]');if(b&&navigator.clipboard)navigator.clipboard.writeText(location.origin+location.pathname+'#p'+sel).then(()=>b.innerHTML='<i class="bi bi-check2"></i> Tersalin')};
+ if(map)map.flyTo([p.lat,p.lng],15,{duration:.6});$$('#list .pitem').forEach(e=>e.classList.toggle('on',e.dataset.id==p.id))}
+const favTxt=id=>FAV.has(id)?'<i class="bi bi-star-fill"></i> Dipantau':'<i class="bi bi-star"></i> Pantau';
+function fav(id){FAV.has(id)?FAV.delete(id):FAV.add(id);try{localStorage.setItem('fav',JSON.stringify([...FAV]))}catch(e){}
+ $('#fn').textContent=FAV.size||'';const b=$(`#detail [data-fav="${id}"]`);if(b)b.innerHTML=favTxt(id);render(true)}
+$('#detail').onclick=e=>{const fv=e.target.closest('[data-fav]');if(fv)return fav(+fv.dataset.fav);const b=e.target.closest('[data-copy]');if(b&&navigator.clipboard)navigator.clipboard.writeText(location.origin+location.pathname+'#p'+sel).then(()=>b.innerHTML='<i class="bi bi-check2"></i> Tersalin')};
 
-function render(){const f=filt();if(layer)layer.clearLayers();
+function render(keep){const f=filt();if(layer)layer.clearLayers();
  $('#kx').classList.toggle('d-none',!K);$('#kx').innerHTML=`<i class="bi bi-x-lg"></i> Kec. ${esc(K)}`;
- if(layer)f.forEach(p=>L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,30],html:`<div class="mk" style="background:${COL[st(p)]}"><i class="bi ${p.jenis=='Drainase'?'bi-water':'bi-building'}"></i></div>`})}).addTo(layer).on('click',()=>show(p)).bindTooltip(esc(p.nama)));
+ if(layer)try{f.forEach(p=>L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,30],html:`<div class="mk" style="background:${COL[st(p)]}"><i class="bi ${p.jenis=='Drainase'?'bi-water':'bi-building'}"></i></div>`})}).addTo(layer).on('click',()=>show(p)).bindTooltip(esc(p.nama)))}catch(e){console.warn('marker',e)}
  $('#n').textContent=f.length;
- $('#list').innerHTML=f.map(p=>{const sx=sisa(p);return `<div class="pitem ${p.id==sel?'on':''}" data-id="${p.id}"><div class="d-flex justify-content-between gap-2"><b class="small">${esc(p.nama)}</b>${pill(p)}</div><div class="progress my-1" style="height:6px"><div class="progress-bar" style="width:${p.progres}%"></div></div><small class="${sx!=null&&sx<0?'late':'text-muted'}">${p.progres}% · ${sx!=null?sisaTxt(p):'target '+tgl(p.target)}</small>${ME?` <small class="jrk"><i class="bi bi-cursor"></i> ${jarak(ME[0],ME[1],p.lat,p.lng).toFixed(1).replace('.',',')} km</small>`:''}</div>`}).join('')||`<div class="text-muted p-3">${D.length?'Tidak ada proyek yang cocok dengan filter.':'Belum ada data proyek.'}</div>`;
- $$('.pitem').forEach(e=>e.onclick=()=>show(D.find(p=>p.id==e.dataset.id)));
- if(map&&f.length)try{map.fitBounds(f.map(p=>[p.lat,p.lng]),{padding:[40,40],maxZoom:14})}catch(e){}}
+ $('#list').innerHTML=f.map(p=>{const sx=sisa(p);return `<div class="pitem ${p.id==sel?'on':''}" data-id="${p.id}"><div class="d-flex justify-content-between gap-2"><b class="small">${esc(p.nama)}</b><span class="d-flex align-items-start gap-2">${pill(p)}<i class="bi bi-star${FAV.has(p.id)?'-fill':''} fav" data-fav="${p.id}" role="button" tabindex="0" aria-label="Pantau proyek"></i></span></div><div class="progress my-1" style="height:6px"><div class="progress-bar" style="width:${p.progres}%"></div></div><small class="${sx!=null&&sx<0?'late':'text-muted'}">${p.progres}% · ${sx!=null?sisaTxt(p):'target '+tgl(p.target)}</small>${ME?` <small class="jrk"><i class="bi bi-cursor"></i> ${jarak(ME[0],ME[1],p.lat,p.lng).toFixed(1).replace('.',',')} km</small>`:''}</div>`}).join('')||`<div class="text-muted p-3">${D.length?'Tidak ada proyek yang cocok dengan filter.':'Belum ada data proyek.'}</div>`;
+ $$('#list .pitem').forEach(e=>e.onclick=()=>show(D.find(p=>p.id==e.dataset.id)));
+ $$('.fav').forEach(i=>i.onclick=ev=>{ev.stopPropagation();fav(+i.dataset.fav)});
+ if(map&&!keep&&f.length)try{map.fitBounds(f.map(p=>[p.lat,p.lng]),{padding:[40,40],maxZoom:14})}catch(e){}}
 
 function statTab(){
  $('#feed').innerHTML=feed(D).map(f=>`<div class="feed" role="button" tabindex="0" data-w="${f.p.id}"><span class="dl ${f.d<0?'late':''}">${f.d>0?'+':''}${f.d}%</span><div class="flex-grow-1"><div class="small fw-semibold">${esc(f.p.nama)}</div><small class="text-muted">naik ke ${f.to}% · Kec. ${esc(f.p.kecamatan)}</small></div><small class="text-muted">${lalu(f.t)}</small></div>`.replace('naik ke',f.d<0?'turun ke':'naik ke')).join('')||'<div class="text-muted small">Belum ada pembaruan. Perbarui progres di panel admin untuk mengisi daftar ini.</div>';
@@ -131,6 +139,13 @@ function statTab(){
  $('#worst').innerHTML=D.filter(p=>p.progres<100).sort(SORT.dev).slice(0,6).map(p=>`<div class="pitem d-flex align-items-center gap-2" data-w="${p.id}"><div class="flex-grow-1"><div class="small fw-semibold">${esc(p.nama)}</div><small class="text-muted">Kec. ${esc(p.kecamatan)} · ${p.progres}% dari rencana ${p.rencana}%</small></div><b class="${dev(p)<0?'late':'text-success'}">${dev(p)>0?'+':''}${dev(p)}%</b></div>`).join('')||'<div class="text-muted">Belum ada data.</div>';
  $$('[data-w]').forEach(e=>e.onclick=()=>{tab('map');show(D.find(p=>p.id==e.dataset.w))})}
 
+function statTab2(){
+ $('#jenis').innerHTML=['Rumah Pompa','Drainase'].map(j=>{const a=D.filter(p=>p.jenis==j),pr=avg(a,'progres'),rc=avg(a,'rencana');
+  return `<div class="mb-3"><div class="d-flex justify-content-between small"><b><i class="bi ${j=='Drainase'?'bi-water':'bi-building'}"></i> ${j} <span class="text-muted fw-normal">· ${a.length} proyek</span></b><span><b>${pr}%</b> <span class="${pr<rc?'late':'text-success'}">(${pr-rc>0?'+':''}${pr-rc}%)</span></span></div><div class="kbar mt-2"><i style="width:${pr}%"></i><b style="left:${rc}%"></b></div><div class="small text-muted mt-1">${rp(a.reduce((x,p)=>x+ +p.nilai,0))} · terlambat ${cnt(a,'terlambat')} · selesai ${cnt(a,'selesai')}</div></div>`}).join('');
+ const g={};D.forEach(p=>{if(p.pelaksana&&p.pelaksana!='-')(g[p.pelaksana]=g[p.pelaksana]||[]).push(p)});
+ const rows=Object.entries(g).map(([k,a])=>({k,n:a.length,d:avg(a,'progres')-avg(a,'rencana'),t:cnt(a,'terlambat')})).sort((x,y)=>x.d-y.d).slice(0,8);
+ $('#pel').innerHTML=rows.map(o=>`<div class="pitem d-flex align-items-center gap-2" data-pel="${esc(o.k)}"><div class="flex-grow-1"><div class="small fw-semibold">${esc(o.k)}</div><small class="text-muted">${o.n} proyek · ${o.t} terlambat</small></div><b class="${o.d<0?'late':'text-success'}">${o.d>0?'+':''}${o.d}%</b></div>`).join('')||'<div class="text-muted">Belum ada data.</div>';
+ $$('[data-pel]').forEach(e=>e.onclick=()=>{$('#q').value=e.dataset.pel;tab('map');render();$('#ctl').scrollIntoView({behavior:'smooth'})})}
 function tab(t){$$('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==t));$('#t-map').classList.toggle('d-none',t!='map');$('#t-stat').classList.toggle('d-none',t!='stat');if(t=='map'&&map)setTimeout(()=>map.invalidateSize(),30)}
 $$('.tabs button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
 
@@ -146,16 +161,27 @@ $$('#chips .chip[data-j]').forEach(b=>b.onclick=()=>{$$('#chips .chip[data-j]').
 $('#loc').onclick=()=>{tab('map');if(!map)return alert('Peta belum termuat.');navigator.geolocation?navigator.geolocation.getCurrentPosition(g=>{ME=[g.coords.latitude,g.coords.longitude];$('#so option[value=dekat]').disabled=false;$('#so').value='dekat';render();map.flyTo(ME,14);L.circleMarker([g.coords.latitude,g.coords.longitude],{radius:8,color:'#fff',weight:3,fillColor:'#2563eb',fillOpacity:1}).addTo(map).bindTooltip('Anda di sini')},()=>alert('Izin lokasi ditolak.')):alert('Peramban tidak mendukung lokasi.')};
 
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+/* muat pustaka peta dari CDN cadangan bila CDN utama gagal */
+const muat=u=>new Promise(r=>{const e=document.createElement('script');e.src=u;e.onload=()=>r(true);e.onerror=()=>r(false);document.head.appendChild(e)});
+async function pastikanPeta(){
+ if(!window.L){for(const u of ['https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js','https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'])if(await muat(u)&&window.L){const c=document.createElement('link');c.rel='stylesheet';c.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';document.head.appendChild(c);break}}
+ if(window.L&&!L.markerClusterGroup){for(const u of ['https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js','https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'])if(await muat(u)&&L.markerClusterGroup)break}}
+document.addEventListener('keydown',e=>{if(e.key=='/'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}});
 (async()=>{
  initTema(()=>{if(map&&!sat)setBase()});
  $('#detail').innerHTML=EMPTY;
+ try{FAV=new Set(JSON.parse(localStorage.getItem('fav')||'[]'))}catch(e){}
+ $('#fn').textContent=FAV.size||'';$('#fv').onclick=()=>{F=!F;$('#fv').classList.toggle('on',F);render()};
  try{D=await getData();if(!Array.isArray(D))D=[]}catch(e){D=[]}
- try{gauge();stats();statTab()}catch(e){console.error(e)}
- try{ /* peta boleh gagal tanpa menghalangi data */
-  map=L.map('map').setView([-7.2756,112.7378],12);
-  layer=(L.markerClusterGroup?L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:40}):L.layerGroup()).addTo(map);
-  setBase();
- }catch(e){console.error(e);map=layer=null;$('#map').innerHTML='<div class="h-100 d-grid place-items-center text-center text-muted p-4"><div><i class="bi bi-wifi-off fs-1"></i><br>Peta gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.<br><small>Daftar proyek tetap bisa dipakai.</small></div></div>'}
+ try{gauge();stats();statTab();statTab2()}catch(e){console.error(e)}
+ render(); /* daftar tampil dulu, tanpa menunggu peta */
+ let galat='';
+ try{await pastikanPeta();map=L.map('map').setView([-7.2756,112.7378],12)}catch(e){galat=e&&e.message||String(e);map=null}
+ if(map){
+  try{layer=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:40}).addTo(map)}catch(e){console.warn('cluster',e);layer=null}
+  if(!layer)layer=L.layerGroup().addTo(map);
+  try{setBase()}catch(e){console.warn('tile',e)}
+ }else $('#map').innerHTML=`<div class="h-100 d-flex align-items-center justify-content-center text-center text-muted p-4"><div><i class="bi bi-wifi-off fs-1"></i><br>Peta gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.<br><small>Daftar proyek tetap bisa dipakai.${galat?`<br>Detail: ${esc(galat)}`:''}</small></div></div>`;
  render();
  const m=location.hash.match(/^#p(\d+)$/),p=m&&D.find(x=>x.id==m[1]);if(p)show(p)})();
 </script></body></html>
