@@ -34,3 +34,7 @@ Halaman publik tidak lagi kosong bila plugin cluster/Leaflet dari CDN gagal dimu
 
 **Publik** — ★ Pantau proyek (tersimpan di perangkat) + filter Pantauan, kartu Per Jenis Proyek, Kinerja Pelaksana, pintasan `/` untuk mencari.
 **Admin** — grafik Tren Progres Rata-rata, filter status tabel, urut kolom (klik judul kolom), edit cepat progres tanpa tabel melompat.
+
+
+## Versi 3.4 — Perbaikan basemap Leaflet
+Basemap jalanan diganti dari CARTO ke OpenStreetMap standar karena endpoint CARTO pada versi sebelumnya menampilkan `API KEY REQUIRED`. Peta tidak lagi bergantung pada API key CARTO. Mode Satelit tetap menggunakan Esri. Versi cache service worker dinaikkan agar browser mengambil aset terbaru.
