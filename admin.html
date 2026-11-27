@@ -25,9 +25,13 @@
 <div id="app" class="d-none d-flex">
  <aside class="side p-3 d-flex flex-column" id="side">
   <div class="d-flex align-items-center gap-2 mb-4 px-2"><i class="bi bi-droplet-half fs-2 text-warning"></i><div class="fw-bold lh-1">Kota Surabaya<br><small class="fw-normal opacity-75">Admin DPMPTSP</small></div></div>
+  <div class="px-2 mb-3 small" id="who"></div>
   <nav class="nav flex-column gap-1">
    <a class="nav-link active" data-v="dash"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
    <a class="nav-link" data-v="list"><i class="bi bi-list-task me-2"></i>Daftar Proyek</a>
+   <a class="nav-link d-none" data-v="admins" data-su><i class="bi bi-people me-2"></i>Kelola Admin</a>
+   <a class="nav-link d-none" data-v="log" data-su><i class="bi bi-clock-history me-2"></i>Log Aktivitas</a>
+   <a class="nav-link" data-v="akun"><i class="bi bi-person-gear me-2"></i>Akun Saya</a>
    <a class="nav-link" href="/" target="_blank"><i class="bi bi-box-arrow-up-right me-2"></i>Lihat Situs Publik</a>
   </nav>
   <button class="btn btn-outline-light rounded-pill mt-auto mb-2" data-tema><i class="bi bi-moon-stars-fill"></i> Ganti tema</button>
@@ -53,6 +57,19 @@
    <div class="row g-3 mt-0"><div class="col-12"><div class="card p-3"><div class="d-flex flex-wrap align-items-center gap-2 mb-2"><div class="fw-bold me-auto">Laporan Ringkas</div><button class="btn btn-sm btn-outline-primary" id="lcp"><i class="bi bi-clipboard"></i> Salin</button><a class="btn btn-sm btn-outline-success" id="lwa" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Kirim WhatsApp</a></div><pre id="lap" class="small mb-0" style="white-space:pre-wrap;font-family:inherit"></pre></div></div></div>
   </section>
 
+  <section id="v-admins" class="d-none"><div class="card p-3">
+   <div class="d-flex flex-wrap gap-2 mb-3 align-items-center"><div class="fw-bold me-auto">Akun Admin <span class="badge bg-primary rounded-pill" id="adn"></span></div><button class="btn btn-primary" id="adadd"><i class="bi bi-person-plus"></i> Tambah Admin</button></div>
+   <div class="table-responsive"><table class="table table-hover align-middle mb-0" id="adt"></table></div>
+   <div class="small text-muted mt-3"><i class="bi bi-info-circle"></i> Admin dengan <b>wilayah</b> hanya dapat mengubah proyek di kecamatan yang ditetapkan; kosongkan wilayah untuk akses ke semua kecamatan. Akun nonaktif atau terhapus kehilangan akses dalam hitungan detik.</div>
+  </div></section>
+  <section id="v-log" class="d-none"><div class="card p-3">
+   <div class="d-flex flex-wrap gap-2 mb-3 align-items-center"><div class="fw-bold me-auto">Log Aktivitas <span class="small text-muted fw-normal">(300 terakhir)</span></div><select id="lgu" class="form-select w-auto" aria-label="Filter pengguna"><option value="">Semua pengguna</option></select><button class="btn btn-outline-secondary" id="lgr"><i class="bi bi-arrow-clockwise"></i></button></div>
+   <div id="lgl"></div></div></section>
+  <section id="v-akun" class="d-none"><div class="card p-3" style="max-width:520px"><div class="fw-bold mb-3">Akun Saya</div><div id="akn" class="mb-3 small"></div>
+   <form id="pwf"><div class="fw-semibold mb-2">Ganti password</div>
+    <div class="mb-2"><input type="password" id="pw0" class="form-control" placeholder="Password lama" autocomplete="current-password" required></div>
+    <div class="mb-2"><input type="password" id="pw1" class="form-control" placeholder="Password baru (min. 8 karakter)" autocomplete="new-password" minlength="8" required></div>
+    <button class="btn btn-primary">Simpan password</button></form></div></section>
   <section id="v-list" class="d-none"><div class="card p-3">
    <div class="d-flex flex-wrap gap-2 mb-3">
     <input id="aq" class="form-control w-auto flex-grow-1" placeholder="Cari proyek...">
@@ -68,12 +85,26 @@
 </div>
 
 <!-- MODAL -->
+<div class="modal fade" id="ma" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><form class="modal-content" id="maf">
+ <div class="modal-header"><h5 class="modal-title fw-bold" id="mat">Tambah Admin</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+ <div class="modal-body"><div class="row g-3">
+  <div class="col-md-6"><label class="form-label">Username</label><input name="username" class="form-control" pattern="[a-z0-9._-]{3,30}" title="3–30 karakter: huruf kecil, angka, titik, strip, garis bawah" autocapitalize="none" required></div>
+  <div class="col-md-6"><label class="form-label">Nama lengkap</label><input name="nama" class="form-control" maxlength="80"></div>
+  <div class="col-12" id="mapw"><label class="form-label">Password awal</label><div class="input-group"><input name="password" class="form-control" minlength="8" autocomplete="new-password" required><button type="button" class="btn btn-outline-secondary" id="gen"><i class="bi bi-magic"></i> Buat acak</button></div></div>
+  <div class="col-12"><label class="form-label">Wilayah kerja <small class="text-muted">(tanpa centang = semua kecamatan)</small></label><div id="mwl" class="border rounded p-2" style="max-height:170px;overflow:auto"></div></div>
+  <div class="col-12 form-check form-switch ms-2 d-none" id="maaw"><input class="form-check-input" type="checkbox" name="aktif" id="maak"><label class="form-check-label" for="maak">Akun aktif</label></div>
+ </div></div>
+ <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary">Simpan</button></div></form></div></div>
+<div class="modal fade" id="mr" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+ <div class="modal-header"><h5 class="modal-title fw-bold">Kredensial Admin</h5></div>
+ <div class="modal-body"><div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle"></i> Password hanya ditampilkan <b>sekali</b>. Salin dan berikan ke admin yang bersangkutan.</div><pre id="mrt" class="border rounded p-3 mb-0" style="white-space:pre-wrap"></pre></div>
+ <div class="modal-footer"><button class="btn btn-outline-primary" id="mrc"><i class="bi bi-clipboard"></i> Salin</button><button class="btn btn-primary" data-bs-dismiss="modal">Selesai</button></div></div></div></div>
 <div class="modal fade" id="md" tabindex="-1"><div class="modal-dialog modal-lg modal-dialog-centered"><form class="modal-content" id="mf">
  <div class="modal-header"><h5 class="modal-title fw-bold" id="mt">Proyek</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
  <div class="modal-body"><div class="row g-3">
   <div class="col-md-8"><label class="form-label">Nama Proyek</label><input name="nama" class="form-control" required></div>
   <div class="col-md-4"><label class="form-label">Jenis</label><select name="jenis" class="form-select"><option>Rumah Pompa</option><option>Drainase</option></select></div>
-  <div class="col-md-6"><label class="form-label">Kecamatan</label><input name="kecamatan" class="form-control"></div>
+  <div class="col-md-6"><label class="form-label">Kecamatan</label><input name="kecamatan" class="form-control" list="kl"><datalist id="kl"></datalist></div>
   <div class="col-md-6"><label class="form-label">Pelaksana</label><input name="pelaksana" class="form-control"></div>
   <div class="col-md-3"><label class="form-label">Progres (%)</label><input name="progres" type="number" min="0" max="100" class="form-control" required></div>
   <div class="col-md-3"><label class="form-label">Rencana (%)</label><input name="rencana" type="number" min="0" max="100" class="form-control" required></div>
@@ -101,20 +132,34 @@ const toast=(m,bad)=>{$('#tb').textContent=m;$('#toast').className='toast align-
 const setDirty=v=>{dirty=v;$('#dirty').classList.toggle('d-none',!v)};
 const api=(u,o={})=>fetch(u,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...o});
 function showLogin(){$('#app').classList.add('d-none');$('#login').classList.remove('d-none')}
-async function enter(){$('#login').classList.add('d-none');$('#app').classList.remove('d-none');D=await getData();setDirty(false);render()}
-async function init(){try{const r=await (await api('/api/auth')).json();r.authed?enter():showLogin()}catch(e){showLogin();$('#le').textContent='API tidak tersedia. Jalankan dengan "vercel dev" atau deploy ke Vercel.';$('#le').classList.remove('d-none')}}
+let SES=null,ADM=[];
+const isSU=()=>SES&&SES.role==='superuser',scope=()=>isSU()?[]:(SES&&SES.wilayah)||[],inScope=p=>!scope().length||scope().includes(p.kecamatan);
+function applyRole(){
+ document.querySelectorAll('[data-su]').forEach(e=>e.classList.toggle('d-none',!isSU()));
+ $('#who').innerHTML=`<div class="fw-semibold text-truncate">${esc(SES.nama||SES.user)}</div><span class="badge ${isSU()?'bg-warning text-dark':'bg-light text-dark'}">${isSU()?'Superuser':'Admin'}</span>${scope().length?` <span class="opacity-75">· ${esc(scope().join(', '))}</span>`:''}`;
+ $('#akn').innerHTML=`Masuk sebagai <b>${esc(SES.user)}</b> (${isSU()?'Superuser':'Admin'}). Wilayah: <b>${scope().length?esc(scope().join(', ')):'semua kecamatan'}</b>.`+(isSU()?'<div class="alert alert-info mt-3 mb-0 py-2">Password superuser diatur lewat Environment Variable <code>ADMIN_PASSWORD</code> di Vercel.</div>':'');
+ $('#pwf').classList.toggle('d-none',isSU())}
+const kecList=()=>[...new Set([...D.map(p=>p.kecamatan),...ADM.flatMap(a=>a.wilayah)].filter(Boolean))].sort();
+async function enter(){$('#login').classList.add('d-none');$('#app').classList.remove('d-none');applyRole();
+ D=(await getData()).filter(inScope);$('#kl').innerHTML=kecList().map(k=>`<option value="${esc(k)}">`).join('');
+ if(!isSU()&&!D.length)toast('Belum ada proyek di wilayah Anda. Tambahkan lewat Daftar Proyek.');
+ setDirty(false);render();goto('dash')}
+async function init(){try{const r=await (await api('/api/auth')).json();r.authed?(SES=r,enter()):showLogin()}catch(e){showLogin();$('#le').textContent='API tidak tersedia. Jalankan dengan "vercel dev" atau deploy ke Vercel.';$('#le').classList.remove('d-none')}}
 $('#lf').onsubmit=async e=>{e.preventDefault();$('#lb').disabled=true;$('#le').classList.add('d-none');
  try{const r=await api('/api/auth',{method:'POST',body:JSON.stringify({username:$('#lu').value,password:$('#lp').value})});const j=await r.json();
-  if(r.ok){$('#lp').value='';enter()}else{$('#le').textContent=j.error||'Gagal login';$('#le').classList.remove('d-none')}}
+  if(r.ok){$('#lp').value='';SES=j;enter()}else{$('#le').textContent=j.error||'Gagal login';$('#le').classList.remove('d-none')}}
  catch(x){$('#le').textContent='API tidak tersedia.';$('#le').classList.remove('d-none')}$('#lb').disabled=false};
 $('#eye').onclick=()=>{const i=$('#lp');i.type=i.type=='password'?'text':'password'};
-$('#out').onclick=async()=>{await api('/api/auth',{method:'DELETE'});showLogin()};
+$('#out').onclick=async()=>{await api('/api/auth',{method:'DELETE'});SES=null;D=[];showLogin()};
 $('#burger').onclick=()=>$('#side').classList.toggle('open');
-document.querySelectorAll('[data-v]').forEach(a=>a.onclick=()=>{document.querySelectorAll('[data-v]').forEach(x=>x.classList.remove('active'));a.classList.add('active');
- ['dash','list'].forEach(v=>$('#v-'+v).classList.toggle('d-none',v!=a.dataset.v));$('#ttl').textContent=a.textContent.trim();$('#side').classList.remove('open')});
+function goto(v){document.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('active',x.dataset.v==v));
+ ['dash','list','admins','log','akun'].forEach(k=>$('#v-'+k).classList.toggle('d-none',k!=v));
+ $('#ttl').textContent=document.querySelector(`[data-v="${v}"]`).textContent.trim();$('#side').classList.remove('open');
+ if(v=='admins')loadAdmins();if(v=='log')loadLog()}
+document.querySelectorAll('[data-v]').forEach(a=>a.onclick=()=>goto(a.dataset.v));
 $('#save').onclick=async()=>{const b=$('#save');b.disabled=true;
  try{const r=await api('/api/proyek',{method:'PUT',body:JSON.stringify(D)});const j=await r.json();
-  if(r.status==401){toast('Sesi berakhir, login ulang.',1);showLogin()}else if(r.ok){setDirty(false);toast('Tersimpan: '+j.count+' proyek.')}else toast(j.error||'Gagal menyimpan',1)}
+  if(r.status==401){toast('Sesi berakhir, login ulang.',1);showLogin()}else if(r.ok){setDirty(false);toast('Tersimpan: '+j.count+' proyek.'+(j.dropped?` ${j.dropped} proyek di luar wilayah Anda diabaikan.`:''),j.dropped?1:0);if(j.dropped)D=(await getData()).filter(inScope),render()}else toast(j.error||'Gagal menyimpan',1)}
  catch(e){toast('Gagal terhubung ke server.',1)}b.disabled=false};
 function dash(){const c=k=>cnt(D,k),a=avg(D,'progres'),r=avg(D,'rencana'),d=a-r,tot=D.reduce((x,p)=>x+ +p.nilai,0);
  const it=[['bi-collection-fill','#1d4ed8','Total Proyek',D.length],['bi-play-fill','#16a34a','Berjalan',c('berjalan')],['bi-check2-circle','#2563eb','Selesai',c('selesai')],['bi-alarm-fill','#dc2626','Terlambat',c('terlambat')],['bi-cash-stack','#0a2463','Total Nilai Kontrak',rp(tot)]];
@@ -142,6 +187,7 @@ function openForm(p){editId=p?p.id:null;$('#mt').textContent=p?'Edit Proyek':'Ta
  $('#pm').classList.add('d-none');if(p)Object.keys(p).forEach(k=>f.elements[k]&&(f.elements[k].value=p[k]));else{f.elements.lat.value=-7.2756;f.elements.lng.value=112.7378;f.elements.progres.value=0;f.elements.rencana.value=0}modal().show()}
 $('#add').onclick=()=>openForm();
 $('#mf').onsubmit=e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target));
+ if(scope().length&&!scope().includes(String(o.kecamatan||'').trim()))return toast('Kecamatan harus salah satu wilayah Anda: '+scope().join(', '),1);
  ['progres','rencana','nilai','lat','lng'].forEach(k=>o[k]=+o[k]||0);o.progres=Math.min(100,o.progres);o.rencana=Math.min(100,o.rencana);
  if(editId!=null)D=D.map(p=>p.id==editId?{...p,...o,riwayat:(p.progres!=o.progres||!(p.riwayat||[]).length)?catat(p.riwayat,o.progres):p.riwayat}:p);else D.push({id:Math.max(0,...D.map(p=>+p.id))+1,...o,riwayat:catat([],o.progres)});
  modal().hide();setDirty(true);render()};
@@ -177,6 +223,49 @@ $('#pick').onclick=()=>{const b=$('#pm'),f=$('#mf').elements;b.classList.toggle(
  if(!pm){pm=L.map(b).setView(ll,14);L.tileLayer(OSM,{attribution:'© OpenStreetMap · © CARTO'}).addTo(pm);pk=L.marker(ll).addTo(pm);
   pm.on('click',e=>{pk.setLatLng(e.latlng);f.lat.value=e.latlng.lat.toFixed(6);f.lng.value=e.latlng.lng.toFixed(6)})}
  else{pm.setView(ll,14);pk.setLatLng(ll)}setTimeout(()=>pm.invalidateSize(),60)};
+
+/* ===== Kelola admin (superuser) ===== */
+const fmtW=t=>t?new Date(t).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+async function loadAdmins(){try{const r=await api('/api/admins'),j=await r.json();if(!r.ok)return toast(j.error||'Gagal memuat akun',1);ADM=j;drawAdmins()}catch(e){toast('Gagal terhubung ke server.',1)}}
+function drawAdmins(){$('#adn').textContent=ADM.length;
+ $('#adt').innerHTML='<thead class="table-light"><tr><th>Akun</th><th>Wilayah</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead><tbody>'+(ADM.map(a=>`<tr><td><b>${esc(a.username)}</b><div class="small text-muted">${esc(a.nama)||'—'}</div></td>
+ <td>${a.wilayah.length?a.wilayah.map(w=>`<span class="badge bg-primary-subtle text-primary-emphasis me-1">${esc(w)}</span>`).join(''):'<span class="text-muted small">Semua kecamatan</span>'}</td>
+ <td><span class="pill ${a.aktif?'st-berjalan':'st-terlambat'}">${a.aktif?'Aktif':'Nonaktif'}</span></td><td class="small">${fmtW(a.terakhirLogin)}</td>
+ <td class="text-nowrap"><button class="btn btn-sm btn-light" data-ae="${esc(a.username)}" title="Edit"><i class="bi bi-pencil"></i></button> <button class="btn btn-sm btn-light" data-ar="${esc(a.username)}" title="Reset password"><i class="bi bi-key"></i></button> <button class="btn btn-sm btn-light text-danger" data-ad="${esc(a.username)}" title="Hapus"><i class="bi bi-trash"></i></button></td></tr>`).join('')||'<tr><td colspan="5" class="text-center text-muted py-4">Belum ada akun admin. Klik “Tambah Admin”.</td></tr>')+'</tbody>';
+ document.querySelectorAll('[data-ae]').forEach(b=>b.onclick=()=>openAdm(ADM.find(a=>a.username==b.dataset.ae)));
+ document.querySelectorAll('[data-ar]').forEach(b=>b.onclick=()=>resetPw(b.dataset.ar));
+ document.querySelectorAll('[data-ad]').forEach(b=>b.onclick=()=>delAdm(b.dataset.ad))}
+const sandi=()=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789',a=new Uint32Array(12);crypto.getRandomValues(a);return[...a].map(x=>c[x%c.length]).join('')};
+let editAdm=null;
+function openAdm(a){editAdm=a||null;const f=$('#maf').elements;$('#maf').reset();$('#mat').textContent=a?'Edit Admin':'Tambah Admin';
+ f.username.readOnly=!!a;f.username.value=a?a.username:'';f.nama.value=a?a.nama:'';f.password.required=!a;$('#mapw').classList.toggle('d-none',!!a);$('#maaw').classList.toggle('d-none',!a);f.aktif.checked=a?a.aktif:true;
+ const sel=new Set(a?a.wilayah:[]);$('#mwl').innerHTML=kecList().map((k,i)=>`<div class="form-check"><input class="form-check-input" type="checkbox" value="${esc(k)}" id="wk${i}" ${sel.has(k)?'checked':''}><label class="form-check-label" for="wk${i}">${esc(k)}</label></div>`).join('')||'<div class="small text-muted">Belum ada data kecamatan dari proyek.</div>';
+ bootstrap.Modal.getOrCreateInstance($('#ma')).show()}
+function tampilkan(user,pw,judul){$('#mrt').textContent=`${judul}\nURL      : ${location.origin}/admin\nUsername : ${user}\nPassword : ${pw}`;bootstrap.Modal.getOrCreateInstance($('#mr')).show()}
+$('#mrc').onclick=()=>navigator.clipboard?.writeText($('#mrt').textContent).then(()=>toast('Kredensial disalin.'));
+$('#adadd').onclick=()=>openAdm(null);$('#gen').onclick=()=>{$('#maf').elements.password.value=sandi()};
+$('#maf').onsubmit=async e=>{e.preventDefault();const f=e.target.elements,w=[...document.querySelectorAll('#mwl input:checked')].map(x=>x.value);
+ const body=editAdm?{username:editAdm.username,nama:f.nama.value,wilayah:w,aktif:f.aktif.checked}:{username:f.username.value,nama:f.nama.value,password:f.password.value,wilayah:w};
+ try{const r=await api('/api/admins',{method:editAdm?'PUT':'POST',body:JSON.stringify(body)}),j=await r.json();if(!r.ok)return toast(j.error||'Gagal menyimpan akun',1);
+  bootstrap.Modal.getOrCreateInstance($('#ma')).hide();await loadAdmins();
+  if(!editAdm)tampilkan(body.username,body.password,'Akun admin baru dibuat');else toast('Akun diperbarui.')}catch(x){toast('Gagal terhubung ke server.',1)}};
+async function resetPw(u){if(!confirm(`Reset password ${u}? Password lama langsung tidak berlaku.`))return;const pw=sandi();
+ try{const r=await api('/api/admins',{method:'PUT',body:JSON.stringify({username:u,password:pw})}),j=await r.json();if(!r.ok)return toast(j.error||'Gagal reset',1);tampilkan(u,pw,'Password direset')}catch(x){toast('Gagal terhubung ke server.',1)}}
+async function delAdm(u){if(!confirm(`Hapus akun ${u}? Tindakan ini tidak dapat dibatalkan.`))return;
+ try{const r=await api('/api/admins?username='+encodeURIComponent(u),{method:'DELETE'}),j=await r.json();if(!r.ok)return toast(j.error||'Gagal menghapus',1);toast('Akun dihapus.');loadAdmins()}catch(x){toast('Gagal terhubung ke server.',1)}}
+
+/* ===== Log aktivitas ===== */
+let LOG=[];
+async function loadLog(){try{const r=await api('/api/log'),j=await r.json();if(!r.ok)return toast(j.error||'Gagal memuat log',1);LOG=j;
+ const cur=$('#lgu').value;$('#lgu').innerHTML='<option value="">Semua pengguna</option>'+[...new Set(LOG.map(l=>l.u))].map(u=>`<option ${u==cur?'selected':''}>${esc(u)}</option>`).join('');drawLog()}catch(e){toast('Gagal terhubung ke server.',1)}}
+function drawLog(){const u=$('#lgu').value,L=LOG.filter(l=>!u||l.u==u);
+ $('#lgl').innerHTML=L.map(l=>`<div class="feed" style="align-items:flex-start"><span class="dl" style="min-width:34px"><i class="bi ${l.aksi=='akun'?'bi-person-gear':'bi-pencil-square'}"></i></span><div class="flex-grow-1"><div class="small"><b>${esc(l.u)}</b> <span class="badge ${l.r=='superuser'?'bg-warning text-dark':'bg-light text-dark'}">${l.r=='superuser'?'Superuser':'Admin'}</span> · ${esc(l.ringkas)}</div>
+ ${(l.detail||[]).length?`<details class="small text-muted"><summary>Rincian (${l.detail.length}${l.lebih?'+'+l.lebih:''})</summary><ul class="mb-0 ps-3">${l.detail.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></details>`:''}</div><small class="text-muted text-nowrap">${fmtW(l.t)}</small></div>`).join('')||'<div class="text-muted">Belum ada aktivitas tercatat.</div>'}
+$('#lgu').onchange=drawLog;$('#lgr').onclick=loadLog;
+
+/* ===== Ganti password sendiri ===== */
+$('#pwf').onsubmit=async e=>{e.preventDefault();try{const r=await api('/api/auth',{method:'PATCH',body:JSON.stringify({lama:$('#pw0').value,baru:$('#pw1').value})}),j=await r.json();
+ if(!r.ok)return toast(j.error||'Gagal mengganti password',1);$('#pwf').reset();toast('Password diganti.')}catch(x){toast('Gagal terhubung ke server.',1)}};
 addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 initTema();
  init();

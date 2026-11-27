@@ -1,6 +1,6 @@
 {
   "name":"proyek-rumah-pompa-surabaya",
-  "version":"3.3.0",
+  "version":"3.5.0",
   "private":true,
   "dependencies":{"@vercel/blob":"^2.9.0"}
 }

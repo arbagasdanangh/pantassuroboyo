@@ -88,6 +88,7 @@ function gauge(){const a=avg(D,'progres'),r=avg(D,'rencana'),y=v=>200-v*2,d=a-r;
  requestAnimationFrame(()=>requestAnimationFrame(()=>{const g=$('.wg');if(g)g.style.transform=`translateY(${g.dataset.y}px)`}));
  $('#gcap').innerHTML=D.length?`<i class="bi bi-dash-lg"></i> garis emas: rencana ${r}% · deviasi <b>${d>0?'+':''}${d}%</b>`:''}
 
+function pembaruan(){const u=D.map(p=>p.upd).filter(Boolean).sort().pop();if(u)$('#gcap').insertAdjacentHTML('beforeend',`<div class="mt-1"><small><i class="bi bi-clock-history"></i> Data diperbarui ${tgl(u.slice(0,10))}</small></div>`)}
 function stats(){const c=k=>cnt(D,k);
  const it=[['bi-collection-fill','#1d4ed8','Total Proyek',D.length,''],['bi-play-fill','#16a34a','Berjalan',c('berjalan'),'berjalan'],['bi-exclamation-lg','#eab308','Perlu Perhatian',c('perhatian'),'perhatian'],['bi-alarm-fill','#dc2626','Terlambat',c('terlambat'),'terlambat'],['bi-check2-circle','#2563eb','Selesai',c('selesai'),'selesai'],['bi-cash-stack','#0a2463','Total Kontrak',rp(D.reduce((a,p)=>a+ +p.nilai,0)),null]];
  $('#stats').innerHTML=it.map(([i,c,l,v,s])=>`<div class="col-6 col-md-4 col-xl-2"><div class="card p-3 stat ${s===null?'':'go'}" ${s===null?'':`data-s="${s}" role="button" tabindex="0" title="Filter: ${l}"`}><div class="ic" style="background:${c}"><i class="bi ${i}"></i></div><div><b ${typeof v=='number'?`data-n="${v}"`:''}>${v}</b><span>${l}</span></div></div></div>`).join('');
@@ -109,6 +110,7 @@ function show(p){sel=p.id;const d=dev(p),sx=sisa(p),wa='https://wa.me/?text='+en
  ${p.catatan?`<div class="catatan mt-3"><i class="bi bi-chat-left-text"></i> ${esc(p.catatan)}</div>`:''}
  <ul class="list-unstyled small mb-0 mt-2"><li class="d-flex justify-content-between py-1"><span class="text-muted">Nilai Kontrak</span><b>${rp(p.nilai)}</b></li><li class="d-flex justify-content-between py-1"><span class="text-muted">Pelaksana</span><b>${esc(p.pelaksana)}</b></li>
  <li class="d-flex justify-content-between py-1"><span class="text-muted">Target Selesai</span><b>${tgl(p.target)}${sx!=null?` <span class="${sx<0?'late':'text-muted'} fw-normal">(${sisaTxt(p)})</span>`:''}</b></li></ul>
+ ${p.upd?`<div class="small text-muted mt-2"><i class="bi bi-clock-history"></i> Data diperbarui ${lalu(p.upd.slice(0,10))}</div>`:''}
  <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-primary rounded-pill" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}"><i class="bi bi-sign-turn-right"></i> Petunjuk Arah</a>
  <a class="btn btn-outline-success rounded-pill" target="_blank" rel="noopener" href="${wa}"><i class="bi bi-whatsapp"></i> Bagikan</a>
  <button class="btn btn-outline-warning rounded-pill" data-fav="${p.id}">${favTxt(p.id)}</button>
@@ -191,7 +193,7 @@ document.addEventListener('keydown',e=>{if(e.key=='/'&&!/INPUT|SELECT|TEXTAREA/.
  try{FAV=new Set(JSON.parse(localStorage.getItem('fav')||'[]'))}catch(e){}
  $('#fn').textContent=FAV.size||'';$('#fv').onclick=()=>{F=!F;$('#fv').classList.toggle('on',F);render()};
  try{D=await getData();if(!Array.isArray(D))D=[]}catch(e){D=[]}
- try{gauge();stats();statTab();statTab2()}catch(e){console.error(e)}
+ try{gauge();stats();statTab();statTab2();pembaruan()}catch(e){console.error(e)}
  render(); /* daftar tampil dulu, tanpa menunggu peta */
  let galat='';
  try{await pastikanPeta();map=L.map('map').setView([-7.2756,112.7378],12)}catch(e){galat=e&&e.message||String(e);map=null}

@@ -38,3 +38,20 @@ Halaman publik tidak lagi kosong bila plugin cluster/Leaflet dari CDN gagal dimu
 
 ## Versi 3.4 — Perbaikan basemap Leaflet
 Basemap jalanan diganti dari CARTO ke OpenStreetMap standar karena endpoint CARTO pada versi sebelumnya menampilkan `API KEY REQUIRED`. Peta tidak lagi bergantung pada API key CARTO. Mode Satelit tetap menggunakan Esri. Versi cache service worker dinaikkan agar browser mengambil aset terbaru.
+
+## Versi 3.5 — Multi-admin & Superuser
+**Peran**
+- **Superuser** — satu akun, dari Environment Variable `ADMIN_USER` / `ADMIN_PASSWORD` (tidak berubah dari sebelumnya). Dapat mengelola semua proyek, **membuat/mengubah/menonaktifkan/menghapus akun admin**, mereset password admin, dan melihat **Log Aktivitas**.
+- **Admin** — dibuat oleh superuser lewat menu **Kelola Admin**. Dapat mengelola proyek dan mengganti password sendiri (menu **Akun Saya**).
+
+**Wilayah kerja** — tiap admin dapat dibatasi ke kecamatan tertentu (tanpa centang = semua kecamatan). Pembatasan diberlakukan **di server**, bukan hanya di tampilan: perubahan pada proyek di luar wilayah diabaikan, proyek tidak bisa dipindahkan ke luar wilayah, dan ID yang bentrok diganti otomatis.
+
+**Keamanan** — password admin disimpan sebagai hash scrypt + salt (tidak pernah disimpan polos). Sesi 8 jam, cookie HttpOnly + SameSite=Strict. Akun yang dinonaktifkan/dihapus kehilangan akses ≤ 15 detik. Password awal/reset hanya ditampilkan sekali. Waktu respons login seragam agar username tidak bisa ditebak.
+
+**Log Aktivitas** — setiap simpan proyek dan setiap perubahan akun dicatat (siapa, kapan, apa; 300 terakhir). Rincian misalnya "Ubah progres X: 40% → 55%".
+
+**Data diperbarui** — server menandai proyek yang berubah; halaman publik menampilkan "Data diperbarui …" (hero dan detail proyek). Penanda dihitung server sehingga tidak bisa dipalsukan.
+
+**Penyimpanan** — akun di `admins.json` dan log di `log.json` pada Vercel Blob (privat), sama seperti `proyek.json`. Secara lokal tanpa Blob, disimpan di `data/_runtime/` (diabaikan git).
+
+**Setelah deploy:** tidak ada Environment Variable baru. Login superuser seperti biasa, buka **Kelola Admin → Tambah Admin**.
